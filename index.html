@@ -625,16 +625,23 @@ function parseTime(s) {
 }
 
 // =====================================================
+// HÀM KIỂM TRA THÁNH NHUẬN AN TOÀN
+// =====================================================
+function isLeapMonth(lunar) {
+  if (typeof lunar.isLeap === 'function') return lunar.isLeap();
+  if (typeof lunar.getLeap === 'function') return lunar.getLeap() === 1;
+  // fallback: dùng getLeapMonth của năm
+  const year = lunar.getYear();
+  const leapMonth = lunar.getLeapMonth ? lunar.getLeapMonth() : 0;
+  const month = lunar.getMonth();
+  return leapMonth === month;
+}
+
+// =====================================================
 // TÍNH BÁT TỰ (hỗ trợ 2 cách tính tháng)
 // =====================================================
 /**
  * Từ solar, lấy bát tự, có thể ghi đè tháng nếu dùng âm lịch mồng 1
- * @param {number} y
- * @param {number} m
- * @param {number} d
- * @param {number} h
- * @param {number} mi
- * @param {boolean} useLunarMonth - true: tháng theo mồng 1 âm lịch (ngũ hổ độn), false: tiết khí chuẩn
  */
 function getBaZi(y, m, d, h, mi, useLunarMonth) {
   const solar = Solar.fromYmdHms(y, m, d, h, mi, 0);
@@ -645,42 +652,37 @@ function getBaZi(y, m, d, h, mi, useLunarMonth) {
   
   let month;
   if (useLunarMonth) {
-    // Tính tháng can chi theo mồng 1 âm lịch (ngũ hổ độn, tháng nhuận lặp can chi)
+    // Tính tháng can chi theo mồng 1 âm lịch (ngũ hổ độn)
     const lunar = solar.getLunar();
-    const lunarMonth = lunar.getMonth();          // 1-12, tháng nhuận vẫn là số đó (nhưng isLeap() = true)
-    const isLeap = lunar.isLeap();
-    const yearGanZhi = ec.getYear();              // "Nhâm Thân" dạng Hán
+    let lunarMonth = lunar.getMonth();       // 1-12
+    const isLeap = isLeapMonth(lunar);
+    const yearGanZhi = ec.getYear();         // "Nhâm Thân" dạng Hán
     const yearGan = CAN_HAN.indexOf(yearGanZhi[0]);
+    
     if (yearGan !== -1) {
-      // Ngũ hổ độn: tìm can của tháng Dần (tháng 1 âm lịch)
-      // Giáp Kỷ khởi Bính Dần, Ất Canh Mậu Dần, Bính Tân Canh Dần, Đinh Nhâm Nhâm Dần, Mậu Quý Giáp Dần
+      // Ngũ hổ độn: can của tháng Dần (tháng 1 âm lịch)
       const startCanMap = {
-        0: 2,  // Giáp -> Bính (2)
+        0: 2,  // Giáp -> Bính
         5: 2,  // Kỷ  -> Bính
-        1: 4,  // Ất  -> Mậu (4)
+        1: 4,  // Ất  -> Mậu
         6: 4,  // Canh -> Mậu
-        2: 6,  // Bính -> Canh (6)
+        2: 6,  // Bính -> Canh
         7: 6,  // Tân  -> Canh
-        3: 8,  // Đinh -> Nhâm (8)
+        3: 8,  // Đinh -> Nhâm
         8: 8,  // Nhâm -> Nhâm
-        4: 0,  // Mậu -> Giáp (0)
+        4: 0,  // Mậu -> Giáp
         9: 0   // Quý -> Giáp
       };
       const startCan = startCanMap[yearGan];
-      // Tính can của tháng âm lịch (tháng 1 = Dần, can = startCan)
-      // canOffset = (startCan + (lunarMonth - 1)) % 10
-      let monthCanIdx = (startCan + (lunarMonth - 1)) % 10;
-      let monthChiIdx = (lunarMonth - 1 + 2) % 12; // 1->Dần(2), 2->Mão(3),..., 12->Sửu(1)
-      if (isLeap) {
-        // Tháng nhuận: lặp lại can chi của tháng trước (không có can chi riêng)
-        // Tìm tháng trước không nhuận
-        let prevMonth = lunarMonth - 1;
-        let prevIsLeap = false;
-        // Cần xác định tháng trước có nhuận không? Phức tạp, đơn giản lấy tháng trước cùng can chi
-        // Với tháng nhuận, ta lùi 1 tháng về tháng chính trước đó
-        monthCanIdx = (startCan + (lunarMonth - 2)) % 10;
-        monthChiIdx = (lunarMonth - 2 + 2) % 12;
-      }
+      
+      // Xác định tháng âm lịch thực tế (nếu nhuận thì lặp can chi của tháng trước)
+      let monthIndex = lunarMonth - 1;
+      if (isLeap) monthIndex--; // tháng nhuận lùi 1 để lấy can chi tháng trước
+      if (monthIndex < 0) monthIndex = 0;
+      
+      let monthCanIdx = (startCan + monthIndex) % 10;
+      let monthChiIdx = (monthIndex + 2) % 12; // tháng 1 (Dần) ứng với chi index 2
+      
       month = {
         si: monthCanIdx,
         bi: monthChiIdx,
