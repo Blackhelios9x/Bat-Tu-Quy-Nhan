@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bát Tự & Thiên Ất Quý Nhân</title>
+
+<!-- Thư viện lịch Trung Hoa chính xác (hỗ trợ tiết khí, can chi) -->
+<script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+
+<style>
+/* ===== BIẾN MÀU ===== */
+:root {
+  --gold:      #c9aa71;
+  --gold-l:    #e8d5a0;
+  --gold-d:    #8a6a2e;
+  --gold-dk:   #5c4620;
+  --red:       #c0392b;
+  --bg:        #0e0a04;
+  --card:      rgba(16,10,2,.90);
+  --card2:     rgba(22,14,4,.88);
+  --bor:       rgba(201,170,113,.22);
+  --bor-h:     rgba(201,170,113,.55);
+  --text:      #f0e6cc;
+  --muted:     #887050;
+  --muted2:    #a08060;
+  --in-bg:     rgba(6,4,1,.75);
+  --err:       #e57373;
+  --hit:       rgba(201,170,113,.18);
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ===== BODY & NỀN ===== */
+body {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Lớp phủ mờ để chữ dễ đọc trên ảnh nền */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: rgba(5, 3, 0, .62);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ===== LAYOUT ===== */
+.wrap {
+  position: relative; z-index: 1;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+/* ===== HEADER ===== */
+header {
+  text-align: center;
+  padding: 48px 20px 36px;
+}
+
+.h-icon {
+  font-size: 50px;
+  line-height: 1;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 18px rgba(201,170,113,.55));
+}
+
+header h1 {
+  font-size: clamp(1.55rem, 4.5vw, 2.3rem);
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 0 28px rgba(201,170,113,.4);
+}
+
+header p {
+  color: var(--muted2);
+  margin-top: 8px;
+  font-style: italic;
+  font-size: .88rem;
+}
+
+.divider {
+  width: 140px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 16px auto;
+}
+
+/* ===== NÚT ẢNH NỀN (góc trên phải) ===== */
+.bg-ctrl {
+  position: fixed;
+  top: 12px; right: 12px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.btn-sm {
+  background: rgba(12, 8, 2, .94);
+  border: 1px solid var(--bor-h);
+  color: var(--gold);
+  padding: 7px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: .77rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .25s, border-color .25s;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.btn-sm:hover {
+  background: rgba(201,170,113,.18);
+  border-color: var(--gold);
+}
+
+/* ===== THẺ / CARD ===== */
+.card {
+  background: var(--card);
+  border: 1px solid var(--bor);
+  border-radius: 14px;
+  padding: 26px 24px;
+  margin-bottom: 22px;
+  backdrop-filter: blur(12px);
+}
+
+.ctitle {
+  font-size: .93rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ctitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--bor);
+}
+
+/* ===== INPUT ===== */
+.irow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.ig {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ig label {
+  font-size: .71rem;
+  color: var(--muted);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+input[type=text] {
+  background: var(--in-bg);
+  border: 1px solid var(--bor);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: .94rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .25s;
+}
+
+input[type=text].w { width: 165px; }
+input[type=text].n { width: 100px; }
+input[type=text]:focus { border-color: var(--gold-d); }
+input[type=text].invalid { border-color: var(--red) !important; }
+input::placeholder { color: var(--muted); opacity: .55; }
+
+/* Số thứ tự người */
+.pnum {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--gold-dk);
+  color: var(--gold-l);
+  font-size: .78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 20px; /* canh với input */
+}
+
+.prow { margin-bottom: 16px; }
+
+.errtxt {
+  color: var(--err);
+  font-size: .76rem;
+  margin-top: 5px;
+  min-height: 14px;
+  padding-left: 2px;
+}
+
+/* ===== NÚT CHÍNH ===== */
+.btn-main {
+  display: block;
+  width: 100%;
+  max-width: 290px;
+  margin: 28px auto 32px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--gold-d), var(--gold));
+  color: #0e0a04;
+  border: none;
+  border-radius: 9px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform .25s, box-shadow .25s;
+  text-transform: uppercase;
+  font-family: inherit;
+}
+
+.btn-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(201,170,113,.38);
+}
+
+.btn-main:active { transform: none; }
+
+/* ===== KẾT QUẢ ===== */
+#results { display: none; }
+
+/* Card bát tự của tôi */
+.my-card {
+  background: linear-gradient(140deg, rgba(26,16,4,.95), rgba(50,34,8,.92));
+  border: 1px solid var(--gold-d);
+  border-radius: 14px;
+  padding: 28px 24px;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.my-card h3 {
+  font-size: .93rem;
+  color: var(--gold);
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+  font-weight: 600;
+}
+
+/* Hiển thị 4 trụ */
+.bz-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+}
+
+.pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.plbl {
+  font-size: .64rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+
+.pval {
+  background: rgba(201,170,113,.1);
+  border: 1px solid var(--bor-h);
+  border-radius: 9px;
+  padding: 11px 15px;
+  min-width: 82px;
+  text-align: center;
+  line-height: 1.55;
+}
+
+.pval .s { display: block; color: var(--gold); font-weight: 700; font-size: .97rem; }
+.pval .b { display: block; color: var(--text); font-size: .88rem; }
+
+/* Đánh dấu trụ có quý nhân */
+.pval.hit-a { border-color: var(--gold); background: rgba(201,170,113,.2); }
+.pval.hit-b { border-color: #7eb8b0; background: rgba(100,190,180,.12); }
+.pval.hit-ab { border-color: #e0c080; background: rgba(220,200,100,.18); }
+
+/* Card từng người cần xem */
+.pcard {
+  background: var(--card2);
+  border: 1px solid var(--bor);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 22px;
+  backdrop-filter: blur(12px);
+}
+
+.pcard-hd {
+  font-size: .9rem;
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--bor);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.badge {
+  background: var(--gold-dk);
+  color: var(--gold-l);
+  padding: 3px 12px;
+  border-radius: 14px;
+  font-size: .78rem;
+  flex-shrink: 0;
+}
+
+/* Grid so sánh % */
+.cmp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+@media (max-width: 560px) {
+  .cmp-grid { grid-template-columns: 1fr; }
+  input[type=text].w { width: 145px; }
+  input[type=text].n { width: 88px; }
+  .pval { min-width: 68px; padding: 9px 10px; }
+}
+
+/* Hộp phần trăm */
+.pct-box {
+  background: rgba(6,4,1,.65);
+  border: 1px solid var(--bor);
+  border-radius: 11px;
+  padding: 18px 16px;
+  text-align: center;
+}
+
+.pct-lbl {
+  font-size: .71rem;
+  color: var(--muted2);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.pct-val {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.pct-bar {
+  width: 100%; height: 5px;
+  background: rgba(201,170,113,.12);
+  border-radius: 3px;
+  margin: 10px 0 8px;
+  overflow: hidden;
+}
+
+.pct-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold-dk), var(--gold));
+}
+
+.pct-stars { font-size: .88rem; color: var(--gold-l); letter-spacing: 1px; }
+
+.pct-hits {
+  font-size: .70rem;
+  color: var(--muted2);
+  margin-top: 6px;
+}
+
+/* Dòng tổng kết */
+.sum-line {
+  text-align: center;
+  margin-top: 16px;
+  font-size: .82rem;
+  color: var(--muted2);
+  padding-top: 12px;
+  border-top: 1px solid var(--bor);
+}
+
+.sum-line strong { color: var(--gold); }
+
+/* Ghi chú Quý Nhân */
+.note-card {
+  background: rgba(10,6,1,.7);
+  border: 1px solid rgba(201,170,113,.15);
+  border-left: 3px solid var(--gold-d);
+  border-radius: 0 10px 10px 0;
+  padding: 14px 18px;
+  margin-top: 16px;
+  font-size: .78rem;
+  color: var(--muted2);
+  line-height: 1.7;
+}
+
+.note-card strong { color: var(--gold-l); }
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 28px 16px;
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.8;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ======== NÚT CHỌN ẢNH NỀN (góc phải trên) ======== -->
+<div class="bg-ctrl">
+  <label class="btn-sm" title="Chọn ảnh nền trang (jpg, png, webp)">
+    🖼 Ảnh nền
+    <input type="file" id="bgInput" accept="image/jpeg,image/png,image/webp"
+           style="display:none" onchange="uploadBg(event)">
+  </label>
+  <button class="btn-sm" id="rmBgBtn" style="display:none" onclick="removeBg()">✕ Xóa nền</button>
+</div>
+
+<!-- ======== NỘI DUNG CHÍNH ======== -->
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="h-icon">☯</div>
+    <h1>Bát Tự &amp; Thiên Ất Quý Nhân</h1>
+    <div class="divider"></div>
+    <p>Nhập ngày giờ sinh dương lịch để tính Bát Tự và so sánh Quý Nhân</p>
+  </header>
+
+  <!-- THÔNG TIN CỦA TÔI -->
+  <div class="card">
+    <div class="ctitle">⭐ Thông tin của bạn</div>
+    <div class="irow">
+      <div class="ig">
+        <label>Ngày sinh (dd/mm/yyyy)</label>
+        <input type="text" id="myDate" class="w" placeholder="VD: 15/06/1984" maxlength="10">
+      </div>
+      <div class="ig">
+        <label>Giờ sinh (hh:mm) — 24h</label>
+        <input type="text" id="myTime" class="n" placeholder="11:30" maxlength="5">
+      </div>
+    </div>
+    <div id="myErr" class="errtxt"></div>
+  </div>
+
+  <!-- NGƯỜI CẦN XEM -->
+  <div class="card">
+    <div class="ctitle">👥 Người cần xem (tối đa 5 người)</div>
+    <div id="pInputs"><!-- Tạo động bằng JS --></div>
+  </div>
+
+  <!-- NÚT TÍNH -->
+  <button class="btn-main" onclick="calculate()">✨ Xem Kết Quả</button>
+
+  <!-- KẾT QUẢ -->
+  <div id="results"></div>
+
+  <footer>
+    <p>Bát Tự tính theo tiết khí · Thiên Ất Quý Nhân theo bài thơ cổ</p>
+    <p>Chỉ mang tính tham khảo · Không thay thế tư vấn chuyên nghiệp</p>
+  </footer>
+</div>
+
+<!-- ======================================================
+     JAVASCRIPT
+====================================================== -->
+<script>
+// =====================================================
+// HẰNG SỐ — CAN CHI
+// =====================================================
+
+/** Thiên Can (0–9): Giáp…Quý */
+const CAN = ['Giáp','Ất','Bính','Đinh','Mậu','Kỷ','Canh','Tân','Nhâm','Quý'];
+
+/** Địa Chi (0–11): Tý…Hợi */
+const CHI = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
+
+/** Ký tự Hán tương ứng (để parse từ thư viện lunar-javascript) */
+const CAN_HAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const CHI_HAN = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+
+/**
+ * Bảng Quý Nhân — canIdx → [chiIdx1, chiIdx2]
+ * Theo bài thơ Thiên Ất Quý Nhân:
+ *   Giáp/Mậu/Canh  → Sửu(1), Mùi(7)
+ *   Ất/Kỷ          → Tý(0),  Thân(8)
+ *   Bính/Đinh      → Hợi(11),Dậu(9)
+ *   Tân            → Ngọ(6), Dần(2)
+ *   Nhâm/Quý       → Mão(3), Tỵ(5)
+ */
+const QN = [
+  [1, 7],   // 0 Giáp  → Sửu, Mùi
+  [0, 8],   // 1 Ất    → Tý, Thân
+  [11, 9],  // 2 Bính  → Hợi, Dậu
+  [11, 9],  // 3 Đinh  → Hợi, Dậu
+  [1, 7],   // 4 Mậu   → Sửu, Mùi
+  [0, 8],   // 5 Kỷ    → Tý, Thân
+  [1, 7],   // 6 Canh  → Sửu, Mùi
+  [6, 2],   // 7 Tân   → Ngọ, Dần
+  [3, 5],   // 8 Nhâm  → Mão, Tỵ
+  [3, 5],   // 9 Quý   → Mão, Tỵ
+];
+
+/** Sao hiển thị theo số chữ (0–4) */
+const STARS = ['☆☆☆☆', '★☆☆☆', '★★☆☆', '★★★☆', '★★★★'];
+
+/** Tên hiển thị cho từng trụ */
+const TRULBL = { year: 'Năm', month: 'Tháng', day: 'Ngày', hour: 'Giờ' };
+
+/** Thứ tự hiển thị trái→phải: Giờ, Ngày, Tháng, Năm */
+const ORDER = ['hour', 'day', 'month', 'year'];
+
+// =====================================================
+// KHỞI TẠO
+// =====================================================
+window.addEventListener('DOMContentLoaded', () => {
+
+  // Khôi phục ảnh nền đã lưu (nếu có)
+  const savedBg = localStorage.getItem('battu_bg');
+  if (savedBg) {
+    applyBg(savedBg);
+    document.getElementById('rmBgBtn').style.display = 'flex';
+  }
+
+  // Tạo 5 ô nhập người cần xem
+  const cont = document.getElementById('pInputs');
+  for (let i = 1; i <= 5; i++) {
+    cont.innerHTML += `
+      <div class="prow" id="pr${i}">
+        <div class="irow">
+          <div class="pnum">${i}</div>
+          <div class="ig">
+            <label>Ngày sinh (dd/mm/yyyy)</label>
+            <input type="text" id="p${i}d" class="w"
+                   placeholder="Bỏ trống nếu không xem" maxlength="10">
+          </div>
+          <div class="ig">
+            <label>Giờ (hh:mm) — 24h</label>
+            <input type="text" id="p${i}t" class="n"
+                   placeholder="00:00" maxlength="5">
+          </div>
+        </div>
+        <div class="errtxt" id="p${i}e" style="padding-left:44px"></div>
+      </div>`;
+  }
+});
+
+// =====================================================
+// ẢNH NỀN
+// =====================================================
+
+/** Xử lý upload ảnh nền */
+function uploadBg(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      // Thu nhỏ về tối đa 1920px để tiết kiệm localStorage
+      const MAX = 1920;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      const data = c.toDataURL('image/jpeg', 0.8);
+      try {
+        localStorage.setItem('battu_bg', data);
+      } catch (_) { /* quota vượt, bỏ qua lưu */ }
+      applyBg(data);
+      document.getElementById('rmBgBtn').style.display = 'flex';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/** Áp dụng ảnh nền lên body */
+function applyBg(data) {
+  document.body.style.backgroundImage = `url(${data})`;
+}
+
+/** Xóa ảnh nền */
+function removeBg() {
+  localStorage.removeItem('battu_bg');
+  document.body.style.backgroundImage = '';
+  document.getElementById('rmBgBtn').style.display = 'none';
+  document.getElementById('bgInput').value = '';
+}
+
+// =====================================================
+// PARSE ĐẦU VÀO
+// =====================================================
+
+/**
+ * Parse ngày dạng dd/mm/yyyy
+ * @returns {object|null} {d, m, y} hoặc null nếu lỗi
+ */
+function parseDate(s) {
+  if (!s) return null;
+  const m = s.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const d = +m[1], mo = +m[2], y = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  if (y < 1900 || y > 2100) return null;
+  // Kiểm tra ngày hợp lệ thực sự
+  const dt = new Date(y, mo - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+  return { d, m: mo, y };
+}
+
+/**
+ * Parse giờ dạng hh:mm (24h)
+ * @returns {object|null} {h, min} hoặc null nếu lỗi (chuỗi rỗng → {h:0,min:0})
+ */
+function parseTime(s) {
+  if (!s || !s.trim()) return { h: 0, min: 0 }; // mặc định 00:00
+  const m = s.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = +m[1], min = +m[2];
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return { h, min };
+}
+
+// =====================================================
+// TÍNH BÁT TỰ (dùng thư viện lunar-javascript)
+// =====================================================
+
+/**
+ * Tính Bát Tự từ ngày giờ dương lịch
+ * Thư viện xử lý: tiết khí → tháng can chi, ngày can chi, giờ can chi
+ *
+ * @param {number} y - Năm
+ * @param {number} m - Tháng (1-12)
+ * @param {number} d - Ngày
+ * @param {number} h - Giờ (0-23)
+ * @param {number} mi - Phút (0-59)
+ * @returns {object} {year, month, day, hour} mỗi trụ có {si, bi, can, chi}
+ */
+function getBaZi(y, m, d, h, mi) {
+  // Solar.fromYmdHms → Lunar → EightChar (tính đúng theo tiết khí)
+  const solar = Solar.fromYmdHms(y, m, d, h, mi, 0);
+  const ec    = solar.getLunar().getEightChar();
+
+  return {
+    year:  parseGZ(ec.getYear()),
+    month: parseGZ(ec.getMonth()),
+    day:   parseGZ(ec.getDay()),
+    hour:  parseGZ(ec.getTime()),
+  };
+}
+
+/**
+ * Chuyển chuỗi Can Chi Hán tự (VD: "甲子") → object tiếng Việt
+ * @param {string} gz - 2 ký tự Hán
+ */
+function parseGZ(gz) {
+  const si = CAN_HAN.indexOf(gz[0]);
+  const bi = CHI_HAN.indexOf(gz[1]);
+  return {
+    si,  bi,
+    can: si >= 0 ? CAN[si] : '?',
+    chi: bi >= 0 ? CHI[bi] : '?',
+  };
+}
+
+// =====================================================
+// SO SÁNH QUÝ NHÂN
+// =====================================================
+
+/**
+ * So sánh Quý Nhân giữa "tôi" và một người
+ *
+ * Chiều A: Can của TÔI tại mỗi trụ → xét Chi của NGƯỜI cùng trụ
+ * Chiều B: Can của NGƯỜI tại mỗi trụ → xét Chi của TÔI cùng trụ
+ *
+ * Tối đa 4 "chữ" mỗi chiều → 0/25/50/75/100%
+ */
+function compareQN(myBZ, pBZ) {
+  const aHit = []; // trụ mà can tôi → chi người = quý nhân
+  const bHit = []; // trụ mà can người → chi tôi = quý nhân
+
+  for (const p of ['year', 'month', 'day', 'hour']) {
+    // Chiều A
+    if (myBZ[p].si >= 0 && QN[myBZ[p].si].includes(pBZ[p].bi)) aHit.push(p);
+    // Chiều B
+    if (pBZ[p].si  >= 0 && QN[pBZ[p].si].includes(myBZ[p].bi)) bHit.push(p);
+  }
+
+  return {
+    aCount:   aHit.length,
+    bCount:   bHit.length,
+    aHit,     bHit,
+    aPercent: aHit.length * 25,
+    bPercent: bHit.length * 25,
+  };
+}
+
+// =====================================================
+// RENDER — HIỂN THỊ KẾT QUẢ
+// =====================================================
+
+/**
+ * Render 4 trụ Bát Tự dạng cột
+ * hitA: mảng tên trụ (year/month/day/hour) có quý nhân chiều A
+ * hitB: mảng tên trụ có quý nhân chiều B
+ */
+function renderPillars(bz, hitA = [], hitB = []) {
+  return ORDER.map(p => {
+    const inA = hitA.includes(p);
+    const inB = hitB.includes(p);
+    let cls = '';
+    if (inA && inB) cls = 'hit-ab';
+    else if (inA)   cls = 'hit-a';
+    else if (inB)   cls = 'hit-b';
+    return `
+      <div class="pillar">
+        <span class="plbl">${TRULBL[p]}</span>
+        <div class="pval ${cls}">
+          <span class="s">${bz[p].can}</span>
+          <span class="b">${bz[p].chi}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/** Chuỗi tóm tắt bát tự (Giờ, Ngày, Tháng, Năm) */
+function baziStr(bz) {
+  return ORDER.map(p => `${bz[p].can} ${bz[p].chi}`).join(', ');
+}
+
+/** Render một hộp phần trăm */
+function renderPct(pct, count, label, hits) {
+  const hitStr = hits.length
+    ? `<div class="pct-hits">Khớp tại trụ: ${hits.map(h => TRULBL[h]).join(', ')}</div>`
+    : '';
+  return `
+    <div class="pct-box">
+      <div class="pct-lbl">${label}</div>
+      <div class="pct-val">${pct}%</div>
+      <div class="pct-bar">
+        <div class="pct-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="pct-stars">${STARS[count]}</div>
+      ${hitStr}
+    </div>`;
+}
+
+// =====================================================
+// TÍNH TOÁN & HIỂN THỊ
+// =====================================================
+function calculate() {
+
+  // Kiểm tra thư viện đã load chưa
+  if (typeof Solar === 'undefined') {
+    alert('⚠ Chưa tải được thư viện lịch.\nVui lòng kiểm tra kết nối internet và tải lại trang.');
+    return;
+  }
+
+  // Reset lỗi cũ
+  document.querySelectorAll('.errtxt').forEach(e => e.textContent = '');
+  document.querySelectorAll('input[type=text]').forEach(i => i.classList.remove('invalid'));
+
+  // --- Parse thông tin của tôi ---
+  const myDateRaw = document.getElementById('myDate').value;
+  const myTimeRaw = document.getElementById('myTime').value;
+  const myDate    = parseDate(myDateRaw);
+  const myTime    = parseTime(myTimeRaw);
+  let hasErr = false;
+
+  if (!myDate) {
+    document.getElementById('myDate').classList.add('invalid');
+    document.getElementById('myErr').textContent =
+      '⚠ Ngày không hợp lệ — định dạng: dd/mm/yyyy (VD: 15/06/1984)';
+    hasErr = true;
+  }
+  if (!myTime) {
+    document.getElementById('myTime').classList.add('invalid');
+    document.getElementById('myErr').textContent +=
+      (hasErr ? '   ' : '') + '⚠ Giờ không hợp lệ — định dạng: hh:mm (VD: 11:30)';
+    hasErr = true;
+  }
+  if (hasErr) { document.getElementById('results').style.display = 'none'; return; }
+
+  // Tính Bát Tự của tôi
+  let myBZ;
+  try {
+    myBZ = getBaZi(myDate.y, myDate.m, myDate.d, myTime.h, myTime.min);
+  } catch (err) {
+    document.getElementById('myErr').textContent = '⚠ Lỗi tính bát tự: ' + err.message;
+    return;
+  }
+
+  // --- Parse từng người cần xem ---
+  const people = [];
+  for (let i = 1; i <= 5; i++) {
+    const dRaw = document.getElementById(`p${i}d`).value.trim();
+    const tRaw = document.getElementById(`p${i}t`).value.trim();
+    if (!dRaw) continue; // bỏ trống → bỏ qua
+
+    const pd = parseDate(dRaw);
+    if (!pd) {
+      document.getElementById(`p${i}d`).classList.add('invalid');
+      document.getElementById(`p${i}e`).textContent = '⚠ Ngày không hợp lệ (dd/mm/yyyy)';
+      continue;
+    }
+
+    const pt = parseTime(tRaw);
+    if (tRaw && !pt) {
+      document.getElementById(`p${i}t`).classList.add('invalid');
+      document.getElementById(`p${i}e`).textContent = '⚠ Giờ không hợp lệ (hh:mm)';
+      continue;
+    }
+
+    let pBZ;
+    try {
+      pBZ = getBaZi(pd.y, pd.m, pd.d, pt ? pt.h : 0, pt ? pt.min : 0);
+    } catch (err) {
+      document.getElementById(`p${i}e`).textContent = '⚠ Lỗi: ' + err.message;
+      continue;
+    }
+
+    people.push({ idx: i, bz: pBZ });
+  }
+
+  // --- Xây dựng HTML kết quả ---
+  let html = '';
+
+  // Bát Tự của tôi (không highlight ở đây, highlight ở từng cặp)
+  html += `
+    <div class="my-card">
+      <h3>⭐ Bát Tự của bạn</h3>
+      <div class="bz-row">${renderPillars(myBZ)}</div>
+      <div style="color:var(--muted2);font-size:.8rem;margin-top:4px">${baziStr(myBZ)}</div>
+      <div class="note-card">
+        <strong>Thiên Ất Quý Nhân:</strong>
+        Giáp/Mậu/Canh→Sửu,Mùi · Ất/Kỷ→Tý,Thân · Bính/Đinh→Hợi,Dậu · Tân→Ngọ,Dần · Nhâm/Quý→Mão,Tỵ<br>
+        <span style="font-size:.7rem">
+          🟡 Vàng = trụ bạn là quý nhân của người · 🔵 Xanh = trụ người là quý nhân của bạn · 🌕 Vàng đậm = cả hai chiều
+        </span>
+      </div>
+    </div>`;
+
+  if (people.length === 0) {
+    html += `
+      <div class="card" style="text-align:center;color:var(--muted2)">
+        Chưa có thông tin người cần xem.<br>Vui lòng nhập ít nhất một người để so sánh.
+      </div>`;
+  } else {
+    for (const p of people) {
+      const cmp  = compareQN(myBZ, p.bz);
+      const total = cmp.aCount + cmp.bCount;
+      html += `
+        <div class="pcard">
+          <div class="pcard-hd">
+            <span class="badge">Người ${p.idx}</span>
+            <span style="color:var(--gold-l);font-size:.88rem">${baziStr(p.bz)}</span>
+          </div>
+
+          <!-- Bát Tự người, highlight trụ có quý nhân -->
+          <div class="bz-row" style="margin-bottom:14px">
+            ${renderPillars(p.bz, cmp.bHit, cmp.aHit)}
+          </div>
+
+          <!-- So sánh hai chiều -->
+          <div class="cmp-grid">
+            ${renderPct(
+              cmp.aPercent, cmp.aCount,
+              '🌟 Quý nhân của <strong>bạn</strong><br>đối với người này',
+              cmp.aHit
+            )}
+            ${renderPct(
+              cmp.bPercent, cmp.bCount,
+              '🌟 Quý nhân của người này<br>đối với <strong>bạn</strong>',
+              cmp.bHit
+            )}
+          </div>
+
+          <div class="sum-line">
+            Cặp này có <strong>${total} chữ quý nhân</strong>
+            &nbsp;·&nbsp; Bạn → Người: <strong>${cmp.aCount}</strong> (${cmp.aPercent}%)
+            &nbsp;·&nbsp; Người → Bạn: <strong>${cmp.bCount}</strong> (${cmp.bPercent}%)
+          </div>
+        </div>`;
+    }
+  }
+
+  // Hiển thị
+  const rd = document.getElementById('results');
+  rd.innerHTML = html;
+  rd.style.display = 'block';
+  setTimeout(() => rd.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+}
+</script>
+</body>
+</html>
