@@ -414,6 +414,32 @@ input::placeholder { color: var(--muted); opacity: .55; }
 
 .note-card strong { color: var(--gold-l); }
 
+/* Hướng dẫn GitHub */
+.guide-card {
+  background: rgba(10,6,1,.5);
+  border: 1px dashed var(--gold-d);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 20px 0 10px;
+  font-size: .78rem;
+  color: var(--muted2);
+  text-align: left;
+}
+.guide-card details summary {
+  cursor: pointer;
+  color: var(--gold-l);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.guide-card code {
+  background: #1e1a10;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: .75rem;
+  color: var(--gold);
+}
+
 footer {
   text-align: center;
   padding: 28px 16px;
@@ -478,12 +504,12 @@ footer {
       </div>
     </div>
 
-    <!-- Tùy chọn cách tính tháng -->
+    <!-- Tùy chọn cách tính tháng: mặc định chọn "mồng 1 âm lịch" -->
     <div class="opt-row">
       <div class="ig">
         <span>📆 Cách tính tháng:</span>
-        <label><input type="radio" name="monthMode" value="tiethi" checked> Theo tiết khí (Bát Tự chuẩn)</label>
-        <label><input type="radio" name="monthMode" value="amlich"> Theo mồng 1 âm lịch</label>
+        <label><input type="radio" name="monthMode" value="tiethi"> Theo tiết khí (Bát Tự chuẩn)</label>
+        <label><input type="radio" name="monthMode" value="amlich" checked> Theo mồng 1 âm lịch</label>
       </div>
     </div>
     <div class="errtxt" id="myErr"></div>
@@ -498,8 +524,29 @@ footer {
   <button class="btn-main" onclick="calculate()">✨ Xem Kết Quả</button>
   <div id="results"></div>
 
+  <!-- HƯỚNG DẪN THAY HÌNH NỀN TRÊN GITHUB -->
+  <div class="guide-card">
+    <details>
+      <summary>📘 Hướng dẫn thay ảnh nền tĩnh trên GitHub (không dùng nút upload)</summary>
+      <div style="margin-top: 12px;">
+        <p>Bạn muốn đặt một ảnh nền cố định cho trang web trên GitHub Pages? Làm theo các bước sau:</p>
+        <ol style="margin-left: 20px; margin-top: 8px;">
+          <li><strong>Tải ảnh lên repository</strong>: Upload file ảnh (ví dụ <code>background.jpg</code>) vào cùng thư mục với <code>index.html</code> (hoặc thư mục <code>images/</code>).</li>
+          <li><strong>Sửa file <code>index.html</code></strong>: Tìm dòng CSS có <code>body</code> (khoảng dòng 50-60). Thay đổi hoặc thêm dòng:
+            <br><code>background-image: url('duong_dan_anh');</code>
+            <br>Ví dụ: <code>background-image: url('background.jpg');</code> nếu ảnh cùng thư mục.
+          </li>
+          <li><strong>Commit & push</strong> lên GitHub. Sau vài phút, GitHub Pages sẽ tự động cập nhật.</li>
+        </ol>
+        <p>💡 <strong>Mẹo:</strong> Nếu muốn giữ nguyên nút upload (tạm thời), bạn có thể kết hợp: đặt ảnh nền mặc định trong CSS, người dùng vẫn có thể upload ảnh riêng (lưu vào trình duyệt).</p>
+        <p>🔧 Nếu bạn muốn ảnh nền mặc định ngay từ đầu, hãy thay dòng <code>background-color: var(--bg);</code> trong CSS của <code>body</code> thành:
+        <br><code>background: url('ten_file_anh.jpg') center/cover fixed;</code> và xóa lớp phủ nếu cần.</p>
+      </div>
+    </details>
+  </div>
+
   <footer>
-    <p>Bát Tự tính theo tiết khí (chuẩn) hoặc theo mồng 1 âm lịch – tùy chọn của bạn.<br>
+    <p>Bát Tự tính theo tiết khí (chuẩn) hoặc theo mồng 1 âm lịch – mặc định là mồng 1.<br>
     Thiên Ất Quý Nhân theo bài thơ cổ. Chỉ mang tính tham khảo.</p>
   </footer>
 </div>
@@ -625,12 +672,11 @@ function parseTime(s) {
 }
 
 // =====================================================
-// HÀM KIỂM TRA THÁNH NHUẬN AN TOÀN
+// HÀM KIỂM TRA THÁNG NHUẬN AN TOÀN
 // =====================================================
 function isLeapMonth(lunar) {
   if (typeof lunar.isLeap === 'function') return lunar.isLeap();
   if (typeof lunar.getLeap === 'function') return lunar.getLeap() === 1;
-  // fallback: dùng getLeapMonth của năm
   const year = lunar.getYear();
   const leapMonth = lunar.getLeapMonth ? lunar.getLeapMonth() : 0;
   const month = lunar.getMonth();
@@ -640,9 +686,6 @@ function isLeapMonth(lunar) {
 // =====================================================
 // TÍNH BÁT TỰ (hỗ trợ 2 cách tính tháng)
 // =====================================================
-/**
- * Từ solar, lấy bát tự, có thể ghi đè tháng nếu dùng âm lịch mồng 1
- */
 function getBaZi(y, m, d, h, mi, useLunarMonth) {
   const solar = Solar.fromYmdHms(y, m, d, h, mi, 0);
   const ec = solar.getLunar().getEightChar();
@@ -652,36 +695,23 @@ function getBaZi(y, m, d, h, mi, useLunarMonth) {
   
   let month;
   if (useLunarMonth) {
-    // Tính tháng can chi theo mồng 1 âm lịch (ngũ hổ độn)
     const lunar = solar.getLunar();
-    let lunarMonth = lunar.getMonth();       // 1-12
+    let lunarMonth = lunar.getMonth();
     const isLeap = isLeapMonth(lunar);
-    const yearGanZhi = ec.getYear();         // "Nhâm Thân" dạng Hán
+    const yearGanZhi = ec.getYear();
     const yearGan = CAN_HAN.indexOf(yearGanZhi[0]);
     
     if (yearGan !== -1) {
-      // Ngũ hổ độn: can của tháng Dần (tháng 1 âm lịch)
       const startCanMap = {
-        0: 2,  // Giáp -> Bính
-        5: 2,  // Kỷ  -> Bính
-        1: 4,  // Ất  -> Mậu
-        6: 4,  // Canh -> Mậu
-        2: 6,  // Bính -> Canh
-        7: 6,  // Tân  -> Canh
-        3: 8,  // Đinh -> Nhâm
-        8: 8,  // Nhâm -> Nhâm
-        4: 0,  // Mậu -> Giáp
-        9: 0   // Quý -> Giáp
+        0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0
       };
       const startCan = startCanMap[yearGan];
-      
-      // Xác định tháng âm lịch thực tế (nếu nhuận thì lặp can chi của tháng trước)
       let monthIndex = lunarMonth - 1;
-      if (isLeap) monthIndex--; // tháng nhuận lùi 1 để lấy can chi tháng trước
+      if (isLeap) monthIndex--;
       if (monthIndex < 0) monthIndex = 0;
       
       let monthCanIdx = (startCan + monthIndex) % 10;
-      let monthChiIdx = (monthIndex + 2) % 12; // tháng 1 (Dần) ứng với chi index 2
+      let monthChiIdx = (monthIndex + 2) % 12;
       
       month = {
         si: monthCanIdx,
@@ -690,7 +720,7 @@ function getBaZi(y, m, d, h, mi, useLunarMonth) {
         chi: CHI[monthChiIdx]
       };
     } else {
-      month = parseGZ(ec.getMonth()); // fallback
+      month = parseGZ(ec.getMonth());
     }
   } else {
     month = parseGZ(ec.getMonth());
@@ -773,15 +803,12 @@ function calculate() {
     return;
   }
 
-  // Reset lỗi
   document.querySelectorAll('.errtxt').forEach(e => e.textContent = '');
   document.querySelectorAll('input[type=text]').forEach(i => i.classList.remove('invalid'));
 
-  // Đọc chế độ tháng
   const monthMode = document.querySelector('input[name="monthMode"]:checked').value;
   const useLunarMonth = (monthMode === 'amlich');
 
-  // Parse thông tin tôi
   const myDate = parseDate(document.getElementById('myDate').value);
   const myTime = parseTime(document.getElementById('myTime').value);
   let hasErr = false;
@@ -805,7 +832,6 @@ function calculate() {
     return;
   }
 
-  // Parse những người khác
   const people = [];
   for (let i = 1; i <= 5; i++) {
     const dRaw = document.getElementById(`p${i}d`).value.trim();
@@ -833,7 +859,6 @@ function calculate() {
     people.push({ idx: i, bz: pBZ });
   }
 
-  // Xây dựng HTML kết quả
   let html = '';
   html += `
     <div class="my-card">
