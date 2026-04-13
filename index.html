@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
 <title>Bát Tự · Dụng Thần &amp; Quý Nhân</title>
 <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
 <style>
@@ -93,6 +93,7 @@ header p { color: var(--muted); font-style: italic; font-size: .9rem; }
 input, select {
   background: var(--in-bg); border: 1px solid var(--bor);
   border-radius: 12px; padding: 11px 14px; font-size: .95rem; outline: none;
+  width: 100%;
 }
 input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(166,124,78,.15); }
 input.invalid { border-color: var(--err) !important; }
@@ -156,7 +157,7 @@ input.invalid { border-color: var(--err) !important; }
 /* Quý Nhân styles */
 .pnum { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-l); color: white; display: flex; align-items: center; justify-content: center; }
 .prow { margin-bottom: 14px; }
-input.w { width: 160px; } input.n { width: 95px; }
+input.w { width: 100%; } input.n { width: 100%; }
 .my-card { background: #fffaf2; border-radius: 20px; padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
 .pillar { display: flex; flex-direction: column; align-items: center; }
 .pval { background: #f5ede3; border-radius: 14px; padding: 10px 14px; min-width: 78px; }
@@ -177,6 +178,11 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
 @media (max-width: 600px) {
   .suggest-grid { grid-template-columns: 1fr; gap: 16px; }
   .cmp-grid { grid-template-columns: 1fr; }
+  .irow { flex-direction: column; align-items: stretch; }
+  .ig { width: 100%; }
+  input, select { width: 100%; }
+  .bz-table { gap: 6px; }
+  .bz-cell { font-size: 1rem; padding: 10px 2px; }
 }
 </style>
 </head>
@@ -200,8 +206,16 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
     <div class="card">
       <div class="ctitle">📅 Thông tin ngày giờ sinh</div>
       <div class="irow">
-        <div class="ig"><label>Ngày sinh (Dương lịch)</label><input type="date" id="dt-date" value="1990-01-15"></div>
-        <div class="ig"><label>Giờ sinh</label><select id="dt-hour"><option value="0">00:00-00:59 · Tý</option><option value="1">01:00-01:59 · Sửu</option><option value="2">02:00-02:59 · Sửu</option><option value="3">03:00-03:59 · Dần</option><option value="4">04:00-04:59 · Dần</option><option value="5">05:00-05:59 · Mão</option><option value="6">06:00-06:59 · Mão</option><option value="7">07:00-07:59 · Thìn</option><option value="8">08:00-08:59 · Thìn</option><option value="9">09:00-09:59 · Tỵ</option><option value="10">10:00-10:59 · Tỵ</option><option value="11">11:00-11:59 · Ngọ</option><option value="12" selected>12:00-12:59 · Ngọ</option><option value="13">13:00-13:59 · Mùi</option><option value="14">14:00-14:59 · Mùi</option><option value="15">15:00-15:59 · Thân</option><option value="16">16:00-16:59 · Thân</option><option value="17">17:00-17:59 · Dậu</option><option value="18">18:00-18:59 · Dậu</option><option value="19">19:00-19:59 · Tuất</option><option value="20">20:00-20:59 · Tuất</option><option value="21">21:00-21:59 · Hợi</option><option value="22">22:00-22:59 · Hợi</option><option value="23">23:00-23:59 · Tý</option></select></div>
+        <div class="ig">
+          <label>Ngày sinh (dd/mm/yyyy)</label>
+          <input type="text" id="dt-date" placeholder="VD: 15/01/1990" value="15/01/1990" inputmode="numeric">
+        </div>
+        <div class="ig">
+          <label>Giờ sinh</label>
+          <select id="dt-hour">
+            <option value="0">00:00-00:59 · Tý</option><option value="1">01:00-01:59 · Sửu</option><option value="2">02:00-02:59 · Sửu</option><option value="3">03:00-03:59 · Dần</option><option value="4">04:00-04:59 · Dần</option><option value="5">05:00-05:59 · Mão</option><option value="6">06:00-06:59 · Mão</option><option value="7">07:00-07:59 · Thìn</option><option value="8">08:00-08:59 · Thìn</option><option value="9">09:00-09:59 · Tỵ</option><option value="10">10:00-10:59 · Tỵ</option><option value="11">11:00-11:59 · Ngọ</option><option value="12" selected>12:00-12:59 · Ngọ</option><option value="13">13:00-13:59 · Mùi</option><option value="14">14:00-14:59 · Mùi</option><option value="15">15:00-15:59 · Thân</option><option value="16">16:00-16:59 · Thân</option><option value="17">17:00-17:59 · Dậu</option><option value="18">18:00-18:59 · Dậu</option><option value="19">19:00-19:59 · Tuất</option><option value="20">20:00-20:59 · Tuất</option><option value="21">21:00-21:59 · Hợi</option><option value="22">22:00-22:59 · Hợi</option><option value="23">23:00-23:59 · Tý</option>
+          </select>
+        </div>
       </div>
       <div id="dt-err" class="errtxt"></div>
       <div class="info-note" id="data-source-info">Đang tải dữ liệu gợi ý...</div>
@@ -223,8 +237,8 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
     <div class="card">
       <div class="ctitle">⭐ Thông tin của bạn</div>
       <div class="irow">
-        <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="myDate" class="w" placeholder="VD: 15/06/1984"></div>
-        <div class="ig"><label>Giờ sinh (hh:mm)</label><input type="text" id="myTime" class="n" placeholder="11:30"></div>
+        <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="myDate" class="w" placeholder="VD: 15/06/1984" inputmode="numeric"></div>
+        <div class="ig"><label>Giờ sinh (hh:mm)</label><input type="text" id="myTime" class="n" placeholder="11:30" inputmode="numeric"></div>
       </div>
       <div id="myErr" class="errtxt"></div>
     </div>
@@ -261,8 +275,9 @@ const ORDER_QN = ['hour','day','month','year'];
 const TRULBL = { year:'Năm', month:'Tháng', day:'Ngày', hour:'Giờ' };
 const STARS = ['☆☆☆☆','★☆☆☆','★★☆☆','★★★☆','★★★★'];
 
-// === URL file text trên GitHub (thay bằng URL raw của bạn) ===
+// === URL file text trên GitHub (raw) ===
 const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Blackhelios9x/Bat-Tu-Quy-Nhan/main/dung-than.txt';
+
 // Gợi ý mặc định (fallback)
 const DEFAULT_SUGGESTIONS = {
   0: `- Màu sắc: xanh lá cây\n- Trang sức: vòng tay gỗ, đá xanh lục\n- Hướng: Đông, Đông Nam\n- Mẹo: Mặc đồ màu xanh lá, dùng cây cảnh.`,
@@ -272,8 +287,7 @@ const DEFAULT_SUGGESTIONS = {
   4: `- Màu sắc: xanh dương, đen\n- Trang sức: vòng đá aquamarine, obsidian\n- Hướng: Bắc\n- Mẹo: Dùng hồ cá, tranh nước, màu tối.`
 };
 
-// Biến lưu nội dung từ GitHub
-let uploadedSuggestions = null; // Map: "Mộc" -> nội dung
+let uploadedSuggestions = null;
 
 /* ========== HELPER ========== */
 function nhCss(nh){ return nh>=0 ? NH_CSS[nh] : ''; }
@@ -344,14 +358,36 @@ function getSuggestionContent(hanhIndex) {
   return DEFAULT_SUGGESTIONS[hanhIndex] || 'Không có gợi ý.';
 }
 
+/* ========== PARSE NGÀY dd/mm/yyyy ========== */
+function parseDateDMY(str) {
+  if (!str) return null;
+  const parts = str.trim().split('/');
+  if (parts.length !== 3) return null;
+  const d = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  const y = parseInt(parts[2], 10);
+  if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
+  if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1900 || y > 2100) return null;
+  const date = new Date(y, m-1, d);
+  if (date.getFullYear() !== y || date.getMonth() !== m-1 || date.getDate() !== d) return null;
+  return { d, m, y };
+}
+
 /* ========== DỤNG THẦN ========== */
 function calcDungThan(){
   if(typeof Solar==='undefined'){ alert('Thư viện lịch lỗi.'); return; }
-  const dateVal = document.getElementById('dt-date').value;
-  if(!dateVal){ document.getElementById('dt-err').textContent='Vui lòng chọn ngày'; return; }
-  const [y,m,d] = dateVal.split('-').map(Number);
+  document.getElementById('dt-err').textContent = '';
+  const dateStr = document.getElementById('dt-date').value.trim();
+  const parsed = parseDateDMY(dateStr);
+  if (!parsed) {
+    document.getElementById('dt-err').textContent = '⚠ Ngày không hợp lệ (dd/mm/yyyy)';
+    return;
+  }
+  const { d, m, y } = parsed;
   const h = Number(document.getElementById('dt-hour').value);
-  let bz; try{ bz = getBaZi(y,m,d,h,0); }catch(e){ document.getElementById('dt-err').textContent='Lỗi: '+e; return; }
+  let bz; 
+  try { bz = getBaZi(y, m, d, h, 0); } 
+  catch(e) { document.getElementById('dt-err').textContent = 'Lỗi: '+e; return; }
 
   const nhA = bz.day.nhCan;
   const nhSinhA = SINH.indexOf(nhA);
@@ -430,17 +466,7 @@ function renderBaZiTable(bz){
   document.getElementById('dt-nh-ref').innerHTML=ref;
 }
 
-/* ========== QUÝ NHÂN ========== */
-function parseDate(s){
-  if(!s) return null;
-  const m = s.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if(!m) return null;
-  const d=+m[1], mo=+m[2], y=+m[3];
-  if(mo<1||mo>12||d<1||d>31||y<1900||y>2100) return null;
-  const dt = new Date(y, mo-1, d);
-  if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d) return null;
-  return {d, m:mo, y};
-}
+/* ========== QUÝ NHÂN (giữ nguyên parse dd/mm/yyyy) ========== */
 function parseTime(s){
   if(!s||!s.trim()) return {h:0,min:0};
   const m = s.trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -455,7 +481,7 @@ function calcQuyNhan(){
   document.querySelectorAll('#panel-qn .errtxt').forEach(e=>e.textContent='');
   document.querySelectorAll('#panel-qn input').forEach(i=>i.classList.remove('invalid'));
 
-  const myDate = parseDate(document.getElementById('myDate').value);
+  const myDate = parseDateDMY(document.getElementById('myDate').value);
   const myTime = parseTime(document.getElementById('myTime').value);
   let hasErr = false;
   if(!myDate){ document.getElementById('myDate').classList.add('invalid'); document.getElementById('myErr').textContent='⚠ Ngày không hợp lệ'; hasErr=true; }
@@ -471,7 +497,7 @@ function calcQuyNhan(){
     const dRaw = document.getElementById(`p${i}d`).value.trim();
     const tRaw = document.getElementById(`p${i}t`).value.trim();
     if(!dRaw) continue;
-    const pd = parseDate(dRaw);
+    const pd = parseDateDMY(dRaw);
     if(!pd){ document.getElementById(`p${i}d`).classList.add('invalid'); document.getElementById(`p${i}e`).textContent='⚠ Ngày không hợp lệ'; continue; }
     const pt = parseTime(tRaw);
     if(tRaw && !pt){ document.getElementById(`p${i}t`).classList.add('invalid'); document.getElementById(`p${i}e`).textContent='⚠ Giờ không hợp lệ'; continue; }
@@ -533,21 +559,18 @@ function renderPctQN(pct, count, label, hits){
 
 /* ========== KHỞI TẠO ========== */
 window.addEventListener('DOMContentLoaded', ()=>{
-  // Tạo input cho Quý Nhân
   const cont = document.getElementById('pInputs');
   for(let i=1;i<=5;i++){
     cont.innerHTML += `
       <div class="prow" id="pr${i}">
         <div class="irow">
           <div class="pnum">${i}</div>
-          <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="p${i}d" class="w" placeholder="Bỏ trống nếu không xem"></div>
-          <div class="ig"><label>Giờ (hh:mm)</label><input type="text" id="p${i}t" class="n" placeholder="00:00"></div>
+          <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="p${i}d" class="w" placeholder="Bỏ trống nếu không xem" inputmode="numeric"></div>
+          <div class="ig"><label>Giờ (hh:mm)</label><input type="text" id="p${i}t" class="n" placeholder="00:00" inputmode="numeric"></div>
         </div>
         <div class="errtxt" id="p${i}e" style="padding-left:44px"></div>
       </div>`;
   }
-
-  // Tự động tải file gợi ý từ GitHub
   fetchSuggestionsFromGitHub();
 });
 </script>
