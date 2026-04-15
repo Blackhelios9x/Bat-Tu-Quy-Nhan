@@ -184,6 +184,62 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
   .bz-table { gap: 6px; }
   .bz-cell { font-size: 1rem; padding: 10px 2px; }
 }
+
+/* ===== ĐẠI VẬN ===== */
+.daivan-section { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--bor-h); }
+.daivan-hd {
+  font-size: .88rem; font-weight: 700; color: var(--primary-d);
+  margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+}
+.daivan-hd::after { content: ''; flex: 1; height: 1px; background: var(--bor); }
+.daivan-meta {
+  font-size: .76rem; color: var(--muted); background: #f7f0e6;
+  border-radius: 10px; padding: 8px 14px; margin-bottom: 12px;
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+}
+.daivan-meta strong { color: var(--primary-d); }
+.daivan-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+.dv-item { text-align: center; }
+.dv-age {
+  font-size: .62rem; font-weight: 700; color: var(--muted);
+  background: #f0e8da; border-radius: 6px; padding: 4px 2px;
+  margin-bottom: 4px; line-height: 1.4;
+}
+.dv-age .dv-year { font-size: .58rem; color: var(--primary); display: block; }
+.dv-can, .dv-chi {
+  padding: 10px 3px; border-radius: 12px; font-size: 1.05rem; font-weight: 700;
+  border: 1px solid transparent; margin-bottom: 3px;
+}
+/* Gender picker */
+.gender-row {
+  display: flex; background: var(--in-bg); border: 1px solid var(--bor);
+  border-radius: 12px; overflow: hidden;
+}
+.gender-opt { flex: 1; }
+.gender-opt input[type=radio] { display: none; }
+.gender-opt label {
+  display: block; width: 100%; padding: 11px 8px; text-align: center;
+  cursor: pointer; font-size: .95rem; font-weight: 500;
+  color: var(--muted); border-radius: 0; text-transform: none !important;
+  transition: all .18s;
+}
+.gender-opt:first-child label { border-radius: 11px 0 0 11px; }
+.gender-opt:last-child  label { border-radius: 0 11px 11px 0; }
+.gender-opt input[type=radio]:checked + label {
+  background: var(--primary); color: white; font-weight: 700;
+}
+@media (max-width: 600px) {
+  .daivan-row {
+    display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 8px;
+  }
+  .dv-item { flex: 0 0 66px; }
+  .dv-can, .dv-chi { font-size: .92rem; padding: 8px 2px; }
+}
+
 </style>
 </head>
 <body>
@@ -216,6 +272,19 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
             <option value="0">00:00-00:59 · Tý</option><option value="1">01:00-01:59 · Sửu</option><option value="2">02:00-02:59 · Sửu</option><option value="3">03:00-03:59 · Dần</option><option value="4">04:00-04:59 · Dần</option><option value="5">05:00-05:59 · Mão</option><option value="6">06:00-06:59 · Mão</option><option value="7">07:00-07:59 · Thìn</option><option value="8">08:00-08:59 · Thìn</option><option value="9">09:00-09:59 · Tỵ</option><option value="10">10:00-10:59 · Tỵ</option><option value="11">11:00-11:59 · Ngọ</option><option value="12" selected>12:00-12:59 · Ngọ</option><option value="13">13:00-13:59 · Mùi</option><option value="14">14:00-14:59 · Mùi</option><option value="15">15:00-15:59 · Thân</option><option value="16">16:00-16:59 · Thân</option><option value="17">17:00-17:59 · Dậu</option><option value="18">18:00-18:59 · Dậu</option><option value="19">19:00-19:59 · Tuất</option><option value="20">20:00-20:59 · Tuất</option><option value="21">21:00-21:59 · Hợi</option><option value="22">22:00-22:59 · Hợi</option><option value="23">23:00-23:59 · Tý</option>
           </select>
         </div>
+        <div class="ig">
+          <label>Giới tính</label>
+          <div class="gender-row">
+            <div class="gender-opt">
+              <input type="radio" name="dt-gender" id="g-male" value="male" checked>
+              <label for="g-male">♂ Nam</label>
+            </div>
+            <div class="gender-opt">
+              <input type="radio" name="dt-gender" id="g-female" value="female">
+              <label for="g-female">♀ Nữ</label>
+            </div>
+          </div>
+        </div>
       </div>
       <div id="dt-err" class="errtxt"></div>
       <div class="info-note" id="data-source-info">Đang tải dữ liệu gợi ý...</div>
@@ -227,6 +296,13 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
         <div class="ctitle">📊 Bát Tự của bạn</div>
         <div class="bz-table" id="dt-bz-table"></div>
         <div class="nh-ref" id="dt-nh-ref"></div>
+
+        <!-- Đại Vận — hiển thị ngay bên dưới bát tự -->
+        <div class="daivan-section" id="dt-daivan-section" style="display:none">
+          <div class="daivan-hd">🔮 Đại Vận (8 bước × 10 năm)</div>
+          <div class="daivan-meta" id="dt-daivan-meta"></div>
+          <div class="daivan-row"  id="dt-daivan-row"></div>
+        </div>
       </div>
       <div id="dt-verdict" class="dt-verdict"></div>
     </div>
@@ -404,6 +480,10 @@ function calcDungThan(){
   const total = score1+score2+score3;
 
   renderBaZiTable(bz);
+
+  // Đọc giới tính & tính Đại Vận
+  const isMale = document.querySelector('input[name="dt-gender"]:checked').value === 'male';
+  renderDaiVan(bz, y, m, d, isMale);
   
   const verdictEl = document.getElementById('dt-verdict');
   let dt1, dt2, isWeak = total <= 1;
@@ -464,6 +544,137 @@ function renderBaZiTable(bz){
     if(idx>=0) ref += `<span class="nh-tag sm ${cls}">${NH_NAME[idx]}</span>`;
   });
   document.getElementById('dt-nh-ref').innerHTML=ref;
+}
+
+/* =====================================================
+   ĐẠI VẬN — TÍNH VÀ RENDER
+   -------------------------------------------------------
+   LOGIC:
+   • Can năm Dương (Giáp/Bính/Mậu/Canh/Nhâm = index chẵn):
+       Nam-Dương hoặc Nữ-Âm → Thuận vận (đếm tiến đến tiết sau)
+       Nam-Âm   hoặc Nữ-Dương → Nghịch vận (đếm lùi đến tiết trước)
+   • Số ngày từ ngày sinh đến tiết tham chiếu ÷ 3 = Khởi vận (năm)
+       1 ngày dư = 4 tháng; 2 ngày dư = 8 tháng
+   • Năm ĐV = Năm sinh dương lịch + Khởi vận
+   • Tuổi ĐV = Năm ĐV − Năm sinh âm lịch (can chi năm)
+       Ví dụ: sinh 15/01/1990 → năm âm lịch 1989 (Kỷ Tỵ)
+              9 ngày ÷ 3 = 3 năm → năm ĐV đầu = 1990+3 = 1993
+              Tuổi = 1993−1989 = 4 tuổi ✓
+===================================================== */
+
+/* Tìm vị trí (0-59) của một can-chi trong vòng 60 */
+function ganzhi60pos(si, bi) {
+  for (let k = 0; k < 60; k++) {
+    if (k % 10 === si && k % 12 === bi) return k;
+  }
+  return 0;
+}
+
+/* Lấy năm can-chi từ can-chi trụ Năm, gần với năm sinh dương lịch nhất */
+function getChineseBirthYear(si, bi, birthY) {
+  // Cơ sở: 1984 = Giáp Tý (si=0, bi=0) = vị trí 0
+  const pos  = ganzhi60pos(si, bi);
+  let year   = 1984 + pos;
+  // Điều chỉnh cho gần birthY (và ≤ birthY, vì năm can-chi có thể = birthY−1)
+  while (year > birthY)       year -= 60;
+  while (year + 60 <= birthY) year += 60;
+  return year;
+}
+
+function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
+  const dvSection = document.getElementById('dt-daivan-section');
+  try {
+    /* ---- 1. Xác định chiều thuận / nghịch ---- */
+    // Can năm index chẵn = Dương (Giáp/Bính/Mậu/Canh/Nhâm)
+    const isYangYear = bz.year.si % 2 === 0;
+    // Thuận: Nam-Dương năm || Nữ-Âm năm
+    const isThuanVan = (isMale && isYangYear) || (!isMale && !isYangYear);
+
+    /* ---- 2. Năm sinh theo can-chi (âm lịch can chi) ---- */
+    const chineseBirthYear = getChineseBirthYear(bz.year.si, bz.year.bi, birthY);
+
+    /* ---- 3. Tìm tiết tham chiếu qua thư viện ---- */
+    const birthSolar = Solar.fromYmd(birthY, birthM, birthD);
+    const lunar      = birthSolar.getLunar();
+    let targetJie;
+    try {
+      targetJie = isThuanVan ? lunar.getNextJie() : lunar.getPrevJie();
+    } catch(e) { targetJie = null; }
+
+    if (!targetJie) { dvSection.style.display = 'none'; return; }
+
+    const jieSolar = targetJie.getSolar();
+
+    /* ---- 4. Đếm số ngày (lấy theo ngày dương lịch, bỏ qua giờ) ---- */
+    const d1       = new Date(birthY, birthM - 1, birthD);
+    const d2       = new Date(jieSolar.getYear(), jieSolar.getMonth() - 1, jieSolar.getDay());
+    const diffDays = Math.round(Math.abs(d2 - d1) / 86400000);
+
+    /* ---- 5. Tính Khởi Vận ---- */
+    const khoiVanYears  = Math.floor(diffDays / 3);   // số tuổi (dương lịch) khởi vận
+    const remDays       = diffDays % 3;
+    const khoiVanMonths = remDays * 4;                 // 0, 4, hoặc 8 tháng
+
+    /* ---- 6. Năm ĐV đầu tiên & tuổi hiển thị ---- */
+    // Năm ĐV = năm sinh dương lịch + khởi vận năm
+    const firstDVYear = birthY + khoiVanYears;
+    // Tuổi hiển thị = Năm ĐV − Năm sinh âm lịch can-chi
+    // VD: 1990+3=1993, 1993−1989=4 tuổi ✓
+    const firstDVAge  = firstDVYear - chineseBirthYear;
+
+    /* ---- 7. Sắp 8 can-chi đại vận (thuận / nghịch từ trụ Tháng) ---- */
+    const mSi = bz.month.si, mBi = bz.month.bi;
+    const dvList = [];
+    for (let n = 1; n <= 8; n++) {
+      let si, bi;
+      if (isThuanVan) {
+        si = (mSi + n) % 10;
+        bi = (mBi + n) % 12;
+      } else {
+        si = ((mSi - n) % 10 + 10) % 10;
+        bi = ((mBi - n) % 12 + 12) % 12;
+      }
+      const dvYear = firstDVYear + (n - 1) * 10;
+      const dvAge  = dvYear - chineseBirthYear; // tuổi tính theo năm can-chi
+      dvList.push({
+        si, bi,
+        can:   CAN[si],    chi:   CHI[bi],
+        nhCan: NH_CAN[si], nhChi: NH_CHI[bi],
+        year:  dvYear,
+        age:   dvAge,
+      });
+    }
+
+    /* ---- 8. Render dòng meta ---- */
+    const jieName  = targetJie.getName ? targetJie.getName() : '';
+    const jieDate  = jieSolar.getDay() + '/' + jieSolar.getMonth() + '/' + jieSolar.getYear();
+    const khoiTxt  = khoiVanYears + ' tuổi' + (khoiVanMonths ? ' ' + khoiVanMonths + ' tháng' : '');
+    const ageTxt   = firstDVYear + ' − ' + chineseBirthYear + ' = <strong>' + firstDVAge + ' tuổi</strong>';
+
+    document.getElementById('dt-daivan-meta').innerHTML =
+      '<strong>Vận ' + (isThuanVan ? 'Thuận' : 'Nghịch') + '</strong> · ' +
+      'Can năm: ' + bz.year.can + ' (' + (isYangYear ? 'Dương' : 'Âm') + ') · ' +
+      'Tiết tham chiếu: <strong>' + jieName + '</strong> (' + jieDate + ') · ' +
+      'Số ngày cách tiết: <strong>' + diffDays + '</strong> → ' + diffDays + '÷3 = ' + khoiVanYears + ' năm' +
+      (khoiVanMonths ? ' ' + khoiVanMonths + ' tháng' : '') + ' · ' +
+      'Khởi vận năm ' + firstDVYear + ' (' + ageTxt + ')';
+
+    /* ---- 9. Render 8 ô đại vận ---- */
+    let rowHtml = '';
+    dvList.forEach(dv => {
+      rowHtml += '<div class="dv-item">' +
+        '<div class="dv-age">' + dv.age + ' tuổi<span class="dv-year">' + dv.year + '</span></div>' +
+        '<div class="dv-can nh-' + nhCss(dv.nhCan) + '">' + dv.can + '</div>' +
+        '<div class="dv-chi nh-' + nhCss(dv.nhChi) + '">' + dv.chi + '</div>' +
+        '</div>';
+    });
+    document.getElementById('dt-daivan-row').innerHTML = rowHtml;
+    dvSection.style.display = 'block';
+
+  } catch(err) {
+    console.error('Đại Vận error:', err);
+    dvSection.style.display = 'none';
+  }
 }
 
 /* ========== QUÝ NHÂN (giữ nguyên parse dd/mm/yyyy) ========== */
