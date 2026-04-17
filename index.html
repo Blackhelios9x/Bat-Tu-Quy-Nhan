@@ -239,7 +239,6 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
   .dv-item { flex: 0 0 66px; }
   .dv-can, .dv-chi { font-size: .92rem; padding: 8px 2px; }
 }
-
 </style>
 </head>
 <body>
@@ -264,7 +263,7 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
       <div class="irow">
         <div class="ig">
           <label>Ngày sinh (dd/mm/yyyy)</label>
-          <input type="text" id="dt-date" placeholder="VD: 15/01/1990" value="15/01/1990" inputmode="numeric">
+          <input type="text" id="dt-date" placeholder="dd/mm/yyyy" value="15/01/1990" inputmode="numeric" data-mask="date">
         </div>
         <div class="ig">
           <label>Giờ sinh</label>
@@ -313,7 +312,7 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
     <div class="card">
       <div class="ctitle">⭐ Thông tin của bạn</div>
       <div class="irow">
-        <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="myDate" class="w" placeholder="VD: 15/06/1984" inputmode="numeric"></div>
+        <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="myDate" class="w" placeholder="dd/mm/yyyy" value="15/06/1984" inputmode="numeric" data-mask="date"></div>
         <div class="ig"><label>Giờ sinh (hh:mm)</label><input type="text" id="myTime" class="n" placeholder="11:30" inputmode="numeric"></div>
       </div>
       <div id="myErr" class="errtxt"></div>
@@ -372,7 +371,6 @@ function trungHoacSinh(nhA, nhB){ return nhB===nhA || SINH[nhB]===nhA; }
 
 // Hàm tính can chi tháng âm lịch (từ mùng 1) theo quy tắc Ngũ Hổ Độn
 function getLunarMonthGanIndex(yearGan, month) {
-  // month: 1-12
   const firstMonthGanMap = {
     0: 2,  // Giáp -> Bính
     5: 2,  // Kỷ   -> Bính
@@ -484,19 +482,99 @@ function getSuggestionContent(hanhIndex) {
   return DEFAULT_SUGGESTIONS[hanhIndex] || 'Không có gợi ý.';
 }
 
-/* ========== PARSE NGÀY dd/mm/yyyy ========== */
+/* ========== PARSE NGÀY dd/mm/yyyy (từ chuỗi có dấu gạch) ========== */
 function parseDateDMY(str) {
   if (!str) return null;
-  const parts = str.trim().split('/');
-  if (parts.length !== 3) return null;
-  const d = parseInt(parts[0], 10);
-  const m = parseInt(parts[1], 10);
-  const y = parseInt(parts[2], 10);
+  // Xóa dấu gạch dưới và chỉ lấy số
+  const cleaned = str.replace(/[^0-9]/g, '');
+  if (cleaned.length !== 8) return null;
+  const d = parseInt(cleaned.substring(0,2), 10);
+  const m = parseInt(cleaned.substring(2,4), 10);
+  const y = parseInt(cleaned.substring(4,8), 10);
   if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
   if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1900 || y > 2100) return null;
   const date = new Date(y, m-1, d);
   if (date.getFullYear() !== y || date.getMonth() !== m-1 || date.getDate() !== d) return null;
   return { d, m, y };
+}
+
+/* ========== MASK CHO INPUT NGÀY ========== */
+function setupDateInputs() {
+  const dateInputs = document.querySelectorAll('input[data-mask="date"]');
+  
+  dateInputs.forEach(input => {
+    // Khởi tạo giá trị mặc định nếu trống
+    if (!input.value || input.value === '') {
+      input.value = '__/__/____';
+    } else {
+      input.value = formatDateString(input.value);
+    }
+
+    input.addEventListener('input', function(e) {
+      const raw = this.value.replace(/[^0-9]/g, '').substring(0,8);
+      let formatted = '';
+      if (raw.length > 0) formatted += raw.substring(0,2);
+      if (raw.length >= 3) formatted += '/' + raw.substring(2,4);
+      if (raw.length >= 5) formatted += '/' + raw.substring(4,8);
+      this.value = formatted || '__/__/____';
+      setCaretPosition(this);
+    });
+
+    input.addEventListener('keydown', function(e) {
+      const key = e.key;
+      const cursorPos = this.selectionStart;
+      const value = this.value;
+      
+      if (key === 'Backspace') {
+        if (cursorPos > 0 && (value[cursorPos-1] === '/' || (cursorPos === 3 || cursorPos === 6))) {
+          e.preventDefault();
+          this.setSelectionRange(cursorPos-1, cursorPos-1);
+        }
+      }
+      if (key === 'Delete') {
+        if (cursorPos < value.length && (value[cursorPos] === '/' || (cursorPos === 2 || cursorPos === 5))) {
+          e.preventDefault();
+          this.setSelectionRange(cursorPos+1, cursorPos+1);
+        }
+      }
+    });
+
+    input.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData).getData('text');
+      const numbers = pasted.replace(/[^0-9]/g, '').substring(0,8);
+      let formatted = '';
+      if (numbers.length > 0) formatted += numbers.substring(0,2);
+      if (numbers.length >= 3) formatted += '/' + numbers.substring(2,4);
+      if (numbers.length >= 5) formatted += '/' + numbers.substring(4,8);
+      this.value = formatted || '__/__/____';
+      setCaretPosition(this);
+    });
+
+    input.addEventListener('drop', (e) => e.preventDefault());
+  });
+}
+
+function formatDateString(str) {
+  const nums = str.replace(/[^0-9]/g, '').substring(0,8);
+  if (nums.length === 0) return '__/__/____';
+  let result = nums.substring(0,2);
+  if (nums.length >= 3) result += '/' + nums.substring(2,4);
+  if (nums.length >= 5) result += '/' + nums.substring(4,8);
+  return result;
+}
+
+function setCaretPosition(input) {
+  const val = input.value;
+  let pos = 0;
+  for (let i = 0; i < val.length; i++) {
+    if (val[i] === '/' || val[i] === '_') {
+      pos = i;
+      break;
+    }
+  }
+  if (pos === 0) pos = val.length;
+  input.setSelectionRange(pos, pos);
 }
 
 /* ========== DỤNG THẦN ========== */
@@ -794,18 +872,24 @@ function renderPctQN(pct, count, label, hits){
 
 /* ========== KHỞI TẠO ========== */
 window.addEventListener('DOMContentLoaded', ()=>{
+  // Tạo input động cho tab Quý Nhân
   const cont = document.getElementById('pInputs');
   for(let i=1;i<=5;i++){
     cont.innerHTML += `
       <div class="prow" id="pr${i}">
         <div class="irow">
           <div class="pnum">${i}</div>
-          <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="p${i}d" class="w" placeholder="Bỏ trống nếu không xem" inputmode="numeric"></div>
+          <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="p${i}d" class="w" placeholder="dd/mm/yyyy" inputmode="numeric" data-mask="date"></div>
           <div class="ig"><label>Giờ (hh:mm)</label><input type="text" id="p${i}t" class="n" placeholder="00:00" inputmode="numeric"></div>
         </div>
         <div class="errtxt" id="p${i}e" style="padding-left:44px"></div>
       </div>`;
   }
+
+  // Gắn mask cho tất cả input ngày
+  setupDateInputs();
+
+  // Tải gợi ý
   fetchSuggestionsFromGitHub();
 });
 </script>
