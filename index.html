@@ -203,7 +203,17 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
   grid-template-columns: repeat(8, 1fr);
   gap: 8px;
 }
-.dv-item { text-align: center; }
+.dv-item {
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  border-radius: 16px;
+  padding: 4px 2px;
+}
+.dv-item:hover {
+  background: rgba(166,124,78,.08);
+  transform: scale(0.98);
+}
 .dv-age {
   font-size: .62rem; font-weight: 700; color: var(--muted);
   background: #f0e8da; border-radius: 6px; padding: 4px 2px;
@@ -214,6 +224,25 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
   padding: 10px 3px; border-radius: 12px; font-size: 1.05rem; font-weight: 700;
   border: 1px solid transparent; margin-bottom: 3px;
 }
+/* Khung luận giải đại vận */
+.dv-detail-box {
+  margin-top: 22px;
+  padding: 20px 22px;
+  background: #f5efe7;
+  border-radius: 24px;
+  border-left: 8px solid var(--primary);
+  box-shadow: var(--shadow);
+}
+.dv-detail-title {
+  font-weight: 700; color: var(--primary-d);
+  font-size: 1.1rem; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.dv-detail-content {
+  color: var(--text);
+  line-height: 1.8;
+}
+.dv-detail-content strong { color: var(--primary-d); }
 /* Gender picker */
 .gender-row {
   display: flex; background: var(--in-bg); border: 1px solid var(--bor);
@@ -298,17 +327,25 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
 
         <!-- Đại Vận — hiển thị ngay bên dưới bát tự -->
         <div class="daivan-section" id="dt-daivan-section" style="display:none">
-          <div class="daivan-hd">🔮 Đại Vận (8 bước × 10 năm)</div>
+          <div class="daivan-hd">🔮 Đại Vận (8 bước × 10 năm) — <span style="font-weight:400;font-size:.8rem;">Click vào từng vận để xem luận giải</span></div>
           <div class="daivan-meta" id="dt-daivan-meta"></div>
-          <div class="daivan-row"  id="dt-daivan-row"></div>
+          <div class="daivan-row" id="dt-daivan-row"></div>
+          <!-- Khung chi tiết đại vận khi click -->
+          <div id="dv-detail-container" style="display:none;">
+            <div class="dv-detail-box" id="dv-detail-box">
+              <div class="dv-detail-title" id="dv-detail-title">✨ Luận giải Đại Vận</div>
+              <div class="dv-detail-content" id="dv-detail-content"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div id="dt-verdict" class="dt-verdict"></div>
     </div>
   </div>
 
-  <!-- ========== TAB QUÝ NHÂN ========== -->
+  <!-- ========== TAB QUÝ NHÂN (giữ nguyên) ========== -->
   <div class="tab-panel" id="panel-qn">
+    <!-- ... giữ nguyên phần Quý Nhân như code trước ... -->
     <div class="card">
       <div class="ctitle">⭐ Thông tin của bạn</div>
       <div class="irow">
@@ -334,7 +371,7 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
 </div>
 
 <script>
-/* ========== HẰNG SỐ ========== */
+/* ========== HẰNG SỐ & DỮ LIỆU ========== */
 const CAN = ['Giáp','Ất','Bính','Đinh','Mậu','Kỷ','Canh','Tân','Nhâm','Quý'];
 const CHI = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
 const CAN_HAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
@@ -350,10 +387,14 @@ const ORDER_QN = ['hour','day','month','year'];
 const TRULBL = { year:'Năm', month:'Tháng', day:'Ngày', hour:'Giờ' };
 const STARS = ['☆☆☆☆','★☆☆☆','★★☆☆','★★★☆','★★★★'];
 
-// === URL file text trên GitHub (raw) ===
-const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Blackhelios9x/Bat-Tu-Quy-Nhan/main/dung-than.txt';
+// Quan hệ Địa Chi cơ bản
+const LUC_XUNG = [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]];
+const LUC_HAI = [[0,5],[1,6],[2,7],[3,8],[4,9],[10,11]];
+const TAM_HOP = [[2,6,10],[1,5,9],[0,4,8],[3,7,11]];
+const LUC_HOP = [[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
 
-// Gợi ý mặc định (fallback)
+// GitHub URL
+const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Blackhelios9x/Bat-Tu-Quy-Nhan/main/dung-than.txt';
 const DEFAULT_SUGGESTIONS = {
   0: `- Màu sắc: xanh lá cây\n- Trang sức: vòng tay gỗ, đá xanh lục\n- Hướng: Đông, Đông Nam\n- Mẹo: Mặc đồ màu xanh lá, dùng cây cảnh.`,
   1: `- Màu sắc: đỏ, hồng, cam\n- Trang sức: vòng đá mã não đỏ, thạch anh hồng\n- Hướng: Nam\n- Mẹo: Dùng nến, ánh sáng ấm, đồ điện tử.`,
@@ -363,63 +404,39 @@ const DEFAULT_SUGGESTIONS = {
 };
 
 let uploadedSuggestions = null;
+window.currentDungThanData = null; // Lưu dữ liệu dụng thần để dùng cho luận đại vận
 
 /* ========== HELPER ========== */
 function nhCss(nh){ return nh>=0 ? NH_CSS[nh] : ''; }
-function nhLabel(nh){ return `<span class="nh-tag sm ${nhCss(nh)}">${NH_NAME[nh]}</span>`; }
 function trungHoacSinh(nhA, nhB){ return nhB===nhA || SINH[nhB]===nhA; }
 
-// Hàm tính can chi tháng âm lịch (từ mùng 1) theo quy tắc Ngũ Hổ Độn
 function getLunarMonthGanIndex(yearGan, month) {
-  const firstMonthGanMap = {
-    0: 2,  // Giáp -> Bính
-    5: 2,  // Kỷ   -> Bính
-    1: 4,  // Ất   -> Mậu
-    6: 4,  // Canh -> Mậu
-    2: 6,  // Bính -> Canh
-    7: 6,  // Tân  -> Canh
-    3: 8,  // Đinh -> Nhâm
-    8: 8,  // Nhâm -> Nhâm
-    4: 0,  // Mậu  -> Giáp
-    9: 0   // Quý  -> Giáp
-  };
-  const firstGan = firstMonthGanMap[yearGan];
-  return (firstGan + month - 1) % 10;
+  const firstMonthGanMap = { 0:2,5:2,1:4,6:4,2:6,7:6,3:8,8:8,4:0,9:0 };
+  return (firstMonthGanMap[yearGan] + month - 1) % 10;
 }
 
-// Lấy Bát Tự, có thể chọn dùng tháng âm lịch (từ mùng 1) hoặc tháng tiết khí
 function getBaZi(y, m, d, h, mi, useLunarMonth = true) {
   const solar = Solar.fromYmdHms(y, m, d, h, mi, 0);
   const lunar = solar.getLunar();
-  const ec = lunar.getEightChar(); // Bát Tự theo tiết khí
-  
+  const ec = lunar.getEightChar();
   let bz = {
     year: parseGZ(ec.getYear()),
     month: parseGZ(ec.getMonth()),
     day: parseGZ(ec.getDay()),
     hour: parseGZ(ec.getTime())
   };
-  
   if (useLunarMonth) {
-    // Lưu tháng tiết khí để dùng tính Đại Vận
     bz.monthTietKhi = { ...bz.month };
-    
-    const lunarMonth = lunar.getMonth(); // có thể âm nếu nhuận
-    const absMonth = Math.abs(lunarMonth);
+    const absMonth = Math.abs(lunar.getMonth());
     const yearGanIndex = lunar.getYearGanIndex();
     const monthGanIndex = getLunarMonthGanIndex(yearGanIndex, absMonth);
-    const monthZhiIndex = (absMonth + 1) % 12; // tháng 1 → Dần (2)
-    
+    const monthZhiIndex = (absMonth + 1) % 12;
     bz.month = {
-      si: monthGanIndex,
-      bi: monthZhiIndex,
-      can: CAN[monthGanIndex],
-      chi: CHI[monthZhiIndex],
-      nhCan: NH_CAN[monthGanIndex],
-      nhChi: NH_CHI[monthZhiIndex]
+      si: monthGanIndex, bi: monthZhiIndex,
+      can: CAN[monthGanIndex], chi: CHI[monthZhiIndex],
+      nhCan: NH_CAN[monthGanIndex], nhChi: NH_CHI[monthZhiIndex]
     };
   }
-  
   return bz;
 }
 
@@ -428,7 +445,6 @@ function parseGZ(gz){
   return { si,bi, can:si>=0?CAN[si]:'?', chi:bi>=0?CHI[bi]:'?', nhCan:si>=0?NH_CAN[si]:-1, nhChi:bi>=0?NH_CHI[bi]:-1 };
 }
 
-/* ========== UI ========== */
 function switchTab(id){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
@@ -436,80 +452,12 @@ function switchTab(id){
   document.getElementById('panel-'+id).classList.add('active');
 }
 
-/* ========== TẢI FILE TỪ GITHUB ========== */
-async function fetchSuggestionsFromGitHub() {
-  const infoEl = document.getElementById('data-source-info');
-  try {
-    const response = await fetch(GITHUB_RAW_URL);
-    if (!response.ok) throw new Error('Không thể tải file');
-    const text = await response.text();
-    uploadedSuggestions = parseSuggestionsFromText(text);
-    infoEl.textContent = '✅ Đã tải dữ liệu gợi ý từ GitHub.';
-  } catch (error) {
-    console.warn('Lỗi tải file GitHub, dùng gợi ý mặc định:', error);
-    uploadedSuggestions = null;
-    infoEl.textContent = 'ℹ️ Sử dụng gợi ý mặc định (không kết nối được GitHub).';
-  }
-}
-
-function parseSuggestionsFromText(text) {
-  const map = new Map();
-  const lines = text.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    const m = line.match(/^Dụng thần\s+(Mộc|Hỏa|Thổ|Kim|Thủy)\s*$/i);
-    if (m) {
-      const hanh = m[1];
-      let contentLines = [];
-      let j = i + 1;
-      while (j < lines.length && !lines[j].trim().match(/^Dụng thần\s+(Mộc|Hỏa|Thổ|Kim|Thủy)\s*$/i)) {
-        contentLines.push(lines[j]);
-        j++;
-      }
-      const content = contentLines.join('\n').trim();
-      if (content) map.set(hanh, content);
-      i = j - 1;
-    }
-  }
-  return map;
-}
-
-function getSuggestionContent(hanhIndex) {
-  const hanhName = NH_NAME[hanhIndex];
-  if (uploadedSuggestions && uploadedSuggestions.has(hanhName)) {
-    return uploadedSuggestions.get(hanhName);
-  }
-  return DEFAULT_SUGGESTIONS[hanhIndex] || 'Không có gợi ý.';
-}
-
-/* ========== PARSE NGÀY dd/mm/yyyy (từ chuỗi có dấu gạch) ========== */
-function parseDateDMY(str) {
-  if (!str) return null;
-  // Xóa dấu gạch dưới và chỉ lấy số
-  const cleaned = str.replace(/[^0-9]/g, '');
-  if (cleaned.length !== 8) return null;
-  const d = parseInt(cleaned.substring(0,2), 10);
-  const m = parseInt(cleaned.substring(2,4), 10);
-  const y = parseInt(cleaned.substring(4,8), 10);
-  if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
-  if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1900 || y > 2100) return null;
-  const date = new Date(y, m-1, d);
-  if (date.getFullYear() !== y || date.getMonth() !== m-1 || date.getDate() !== d) return null;
-  return { d, m, y };
-}
-
-/* ========== MASK CHO INPUT NGÀY ========== */
+/* ========== MASK INPUT NGÀY ========== */
 function setupDateInputs() {
   const dateInputs = document.querySelectorAll('input[data-mask="date"]');
-  
   dateInputs.forEach(input => {
-    // Khởi tạo giá trị mặc định nếu trống
-    if (!input.value || input.value === '') {
-      input.value = '__/__/____';
-    } else {
-      input.value = formatDateString(input.value);
-    }
-
+    if (!input.value || input.value === '') input.value = '__/__/____';
+    else input.value = formatDateString(input.value);
     input.addEventListener('input', function(e) {
       const raw = this.value.replace(/[^0-9]/g, '').substring(0,8);
       let formatted = '';
@@ -519,26 +467,19 @@ function setupDateInputs() {
       this.value = formatted || '__/__/____';
       setCaretPosition(this);
     });
-
     input.addEventListener('keydown', function(e) {
-      const key = e.key;
-      const cursorPos = this.selectionStart;
-      const value = this.value;
-      
+      const key = e.key, cursorPos = this.selectionStart, value = this.value;
       if (key === 'Backspace') {
-        if (cursorPos > 0 && (value[cursorPos-1] === '/' || (cursorPos === 3 || cursorPos === 6))) {
-          e.preventDefault();
-          this.setSelectionRange(cursorPos-1, cursorPos-1);
+        if (cursorPos > 0 && (value[cursorPos-1] === '/' || cursorPos === 3 || cursorPos === 6)) {
+          e.preventDefault(); this.setSelectionRange(cursorPos-1, cursorPos-1);
         }
       }
       if (key === 'Delete') {
-        if (cursorPos < value.length && (value[cursorPos] === '/' || (cursorPos === 2 || cursorPos === 5))) {
-          e.preventDefault();
-          this.setSelectionRange(cursorPos+1, cursorPos+1);
+        if (cursorPos < value.length && (value[cursorPos] === '/' || cursorPos === 2 || cursorPos === 5)) {
+          e.preventDefault(); this.setSelectionRange(cursorPos+1, cursorPos+1);
         }
       }
     });
-
     input.addEventListener('paste', function(e) {
       e.preventDefault();
       const pasted = (e.clipboardData || window.clipboardData).getData('text');
@@ -550,11 +491,9 @@ function setupDateInputs() {
       this.value = formatted || '__/__/____';
       setCaretPosition(this);
     });
-
     input.addEventListener('drop', (e) => e.preventDefault());
   });
 }
-
 function formatDateString(str) {
   const nums = str.replace(/[^0-9]/g, '').substring(0,8);
   if (nums.length === 0) return '__/__/____';
@@ -563,36 +502,35 @@ function formatDateString(str) {
   if (nums.length >= 5) result += '/' + nums.substring(4,8);
   return result;
 }
-
 function setCaretPosition(input) {
-  const val = input.value;
-  let pos = 0;
-  for (let i = 0; i < val.length; i++) {
-    if (val[i] === '/' || val[i] === '_') {
-      pos = i;
-      break;
-    }
-  }
-  if (pos === 0) pos = val.length;
-  input.setSelectionRange(pos, pos);
+  const val = input.value; let pos = 0;
+  for (let i=0; i<val.length; i++) if (val[i]==='/'||val[i]==='_') { pos=i; break; }
+  if (pos===0) pos=val.length;
+  input.setSelectionRange(pos,pos);
 }
 
-/* ========== DỤNG THẦN ========== */
+function parseDateDMY(str) {
+  if (!str) return null;
+  const cleaned = str.replace(/[^0-9]/g, '');
+  if (cleaned.length !== 8) return null;
+  const d = parseInt(cleaned.substring(0,2),10), m = parseInt(cleaned.substring(2,4),10), y = parseInt(cleaned.substring(4,8),10);
+  if (isNaN(d)||isNaN(m)||isNaN(y)||m<1||m>12||d<1||d>31||y<1900||y>2100) return null;
+  const date = new Date(y, m-1, d);
+  if (date.getFullYear()!==y||date.getMonth()!==m-1||date.getDate()!==d) return null;
+  return {d,m,y};
+}
+
+/* ========== DỤNG THẦN & ĐẠI VẬN ========== */
 function calcDungThan(){
   if(typeof Solar==='undefined'){ alert('Thư viện lịch lỗi.'); return; }
   document.getElementById('dt-err').textContent = '';
   const dateStr = document.getElementById('dt-date').value.trim();
   const parsed = parseDateDMY(dateStr);
-  if (!parsed) {
-    document.getElementById('dt-err').textContent = '⚠ Ngày không hợp lệ (dd/mm/yyyy)';
-    return;
-  }
+  if (!parsed) { document.getElementById('dt-err').textContent = '⚠ Ngày không hợp lệ (dd/mm/yyyy)'; return; }
   const { d, m, y } = parsed;
   const h = Number(document.getElementById('dt-hour').value);
   let bz; 
-  try { 
-    bz = getBaZi(y, m, d, h, 0, true); // dùng tháng âm lịch
-  } 
+  try { bz = getBaZi(y, m, d, h, 0, true); } 
   catch(e) { document.getElementById('dt-err').textContent = 'Lỗi: '+e; return; }
 
   const nhA = bz.day.nhCan;
@@ -611,23 +549,20 @@ function calcDungThan(){
 
   renderBaZiTable(bz);
 
-  // Đọc giới tính & tính Đại Vận (dùng tháng tiết khí đã lưu)
   const isMale = document.querySelector('input[name="dt-gender"]:checked').value === 'male';
+  const isWeak = total <= 1;
+  let dt1, dt2;
+  if(isWeak){ dt1 = nhA; dt2 = nhSinhA; }
+  else { dt1 = nhAsinh; dt2 = nhKhacA; }
+
+  // Lưu dữ liệu để luận đại vận
+  window.currentDungThanData = { bz, dt1, dt2, isWeak, nhCan: nhA };
+
   renderDaiVan(bz, y, m, d, isMale);
   
   const verdictEl = document.getElementById('dt-verdict');
-  let dt1, dt2, isWeak = total <= 1;
-  let title, desc;
-  if(isWeak){
-    dt1 = nhA; dt2 = nhSinhA;
-    title = `💧 Thân Nhược — Bản mệnh yếu (${total}/3 điểm)`;
-    desc = `Ngũ hành ${NH_NAME[dt1]} (Nhật Can) và ${NH_NAME[dt2]} (hành sinh cho nó) đang YẾU. Cần bổ sung.`;
-  } else {
-    dt1 = nhAsinh; dt2 = nhKhacA;
-    title = `🔥 Thân Vượng — Bản mệnh mạnh (${total}/3 điểm)`;
-    desc = `Ngũ hành ${NH_NAME[nhA]} quá mạnh. Cần dùng ${NH_NAME[dt1]} (tiết hao) hoặc ${NH_NAME[dt2]} (chế ngự).`;
-  }
-
+  const title = isWeak ? `💧 Thân Nhược — Bản mệnh yếu (${total}/3 điểm)` : `🔥 Thân Vượng — Bản mệnh mạnh (${total}/3 điểm)`;
+  const desc = isWeak ? `Ngũ hành ${NH_NAME[dt1]} (Nhật Can) và ${NH_NAME[dt2]} (hành sinh cho nó) đang YẾU. Cần bổ sung.` : `Ngũ hành ${NH_NAME[nhA]} quá mạnh. Cần dùng ${NH_NAME[dt1]} (tiết hao) hoặc ${NH_NAME[dt2]} (chế ngự).`;
   const content1 = getSuggestionContent(dt1);
   const content2 = getSuggestionContent(dt2);
 
@@ -641,14 +576,8 @@ function calcDungThan(){
     <div class="suggest-box">
       <div class="suggest-title">✨ Gợi ý chi tiết ${uploadedSuggestions ? '(từ GitHub)' : '(mặc định)'}</div>
       <div class="suggest-grid">
-        <div class="suggest-col">
-          <h4>🌿 Dụng Thần 1 · ${NH_NAME[dt1]}</h4>
-          <div class="suggest-content">${content1.replace(/\n/g, '<br>')}</div>
-        </div>
-        <div class="suggest-col">
-          <h4>🍂 Dụng Thần 2 · ${NH_NAME[dt2]}</h4>
-          <div class="suggest-content">${content2.replace(/\n/g, '<br>')}</div>
-        </div>
+        <div class="suggest-col"><h4>🌿 Dụng Thần 1 · ${NH_NAME[dt1]}</h4><div class="suggest-content">${content1.replace(/\n/g, '<br>')}</div></div>
+        <div class="suggest-col"><h4>🍂 Dụng Thần 2 · ${NH_NAME[dt2]}</h4><div class="suggest-content">${content2.replace(/\n/g, '<br>')}</div></div>
       </div>
     </div>
   `;
@@ -666,28 +595,16 @@ function renderBaZiTable(bz){
       <div class="bz-cell nh-${nhCss(t.nhChi)}">${t.chi}</div></div>`;
   });
   document.getElementById('dt-bz-table').innerHTML=html;
-  
   let ref='<span style="font-size:.75rem;color:var(--muted)">Màu Ngũ Hành:</span>';
-  const colorClasses = ['moc','hoa','tho','kim','thuy'];
-  colorClasses.forEach(cls => {
-    const idx = NH_CSS.indexOf(cls);
-    if(idx>=0) ref += `<span class="nh-tag sm ${cls}">${NH_NAME[idx]}</span>`;
-  });
+  NH_CSS.forEach((cls,idx)=> ref += `<span class="nh-tag sm ${cls}">${NH_NAME[idx]}</span>`);
   document.getElementById('dt-nh-ref').innerHTML=ref;
 }
 
-/* ========== ĐẠI VẬN (dùng tháng tiết khí) ========== */
-function ganzhi60pos(si, bi) {
-  for (let k = 0; k < 60; k++) {
-    if (k % 10 === si && k % 12 === bi) return k;
-  }
-  return 0;
-}
-
+/* ========== ĐẠI VẬN RENDER ========== */
+function ganzhi60pos(si, bi) { for(let k=0;k<60;k++) if(k%10===si && k%12===bi) return k; return 0; }
 function getChineseBirthYear(si, bi, birthY) {
-  const pos  = ganzhi60pos(si, bi);
-  let year   = 1984 + pos;
-  while (year > birthY)       year -= 60;
+  const pos = ganzhi60pos(si, bi); let year = 1984 + pos;
+  while (year > birthY) year -= 60;
   while (year + 60 <= birthY) year += 60;
   return year;
 }
@@ -695,89 +612,131 @@ function getChineseBirthYear(si, bi, birthY) {
 function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
   const dvSection = document.getElementById('dt-daivan-section');
   try {
-    // Dùng tháng tiết khí để tính đại vận
     const monthForDaivan = bz.monthTietKhi || bz.month;
-    
     const isYangYear = bz.year.si % 2 === 0;
     const isThuanVan = (isMale && isYangYear) || (!isMale && !isYangYear);
-
     const chineseBirthYear = getChineseBirthYear(bz.year.si, bz.year.bi, birthY);
-
     const birthSolar = Solar.fromYmd(birthY, birthM, birthD);
-    const lunar      = birthSolar.getLunar();
-    let targetJie;
-    try {
-      targetJie = isThuanVan ? lunar.getNextJie() : lunar.getPrevJie();
-    } catch(e) { targetJie = null; }
-
+    const lunar = birthSolar.getLunar();
+    let targetJie = isThuanVan ? lunar.getNextJie() : lunar.getPrevJie();
     if (!targetJie) { dvSection.style.display = 'none'; return; }
-
     const jieSolar = targetJie.getSolar();
-
-    const d1       = new Date(birthY, birthM - 1, birthD);
-    const d2       = new Date(jieSolar.getYear(), jieSolar.getMonth() - 1, jieSolar.getDay());
+    const d1 = new Date(birthY, birthM-1, birthD);
+    const d2 = new Date(jieSolar.getYear(), jieSolar.getMonth()-1, jieSolar.getDay());
     const diffDays = Math.round(Math.abs(d2 - d1) / 86400000);
-
-    const khoiVanYears  = Math.floor(diffDays / 3);
-    const remDays       = diffDays % 3;
-    const khoiVanMonths = remDays * 4;
-
+    const khoiVanYears = Math.floor(diffDays / 3);
+    const khoiVanMonths = (diffDays % 3) * 4;
     const firstDVYear = birthY + khoiVanYears;
-    const firstDVAge  = firstDVYear - chineseBirthYear;
+    const firstDVAge = firstDVYear - chineseBirthYear;
 
     const mSi = monthForDaivan.si, mBi = monthForDaivan.bi;
     const dvList = [];
-    for (let n = 1; n <= 8; n++) {
+    for (let n=1; n<=8; n++) {
       let si, bi;
-      if (isThuanVan) {
-        si = (mSi + n) % 10;
-        bi = (mBi + n) % 12;
-      } else {
-        si = ((mSi - n) % 10 + 10) % 10;
-        bi = ((mBi - n) % 12 + 12) % 12;
-      }
-      const dvYear = firstDVYear + (n - 1) * 10;
-      const dvAge  = dvYear - chineseBirthYear;
-      dvList.push({
-        si, bi,
-        can:   CAN[si],    chi:   CHI[bi],
-        nhCan: NH_CAN[si], nhChi: NH_CHI[bi],
-        year:  dvYear,
-        age:   dvAge,
-      });
+      if (isThuanVan) { si = (mSi + n) % 10; bi = (mBi + n) % 12; }
+      else { si = ((mSi - n) % 10 + 10) % 10; bi = ((mBi - n) % 12 + 12) % 12; }
+      const dvYear = firstDVYear + (n-1)*10;
+      const dvAge = dvYear - chineseBirthYear;
+      dvList.push({ si, bi, can: CAN[si], chi: CHI[bi], nhCan: NH_CAN[si], nhChi: NH_CHI[bi], year: dvYear, age: dvAge });
     }
 
-    const jieName  = targetJie.getName ? targetJie.getName() : '';
-    const jieDate  = jieSolar.getDay() + '/' + jieSolar.getMonth() + '/' + jieSolar.getYear();
-    const khoiTxt  = khoiVanYears + ' tuổi' + (khoiVanMonths ? ' ' + khoiVanMonths + ' tháng' : '');
-    const ageTxt   = firstDVYear + ' − ' + chineseBirthYear + ' = <strong>' + firstDVAge + ' tuổi</strong>';
+    // Meta
+    document.getElementById('dt-daivan-meta').innerHTML = `
+      <strong>Vận ${isThuanVan?'Thuận':'Nghịch'}</strong> · Can năm: ${bz.year.can} (${isYangYear?'Dương':'Âm'}) ·
+      Tiết: ${targetJie.getName()} · ${diffDays} ngày → khởi ${khoiVanYears} tuổi ${khoiVanMonths?' '+khoiVanMonths+' tháng':''} ·
+      Năm ${firstDVYear} (${firstDVAge} tuổi)
+    `;
 
-    document.getElementById('dt-daivan-meta').innerHTML =
-      '<strong>Vận ' + (isThuanVan ? 'Thuận' : 'Nghịch') + '</strong> · ' +
-      'Can năm: ' + bz.year.can + ' (' + (isYangYear ? 'Dương' : 'Âm') + ') · ' +
-      'Tiết tham chiếu: <strong>' + jieName + '</strong> (' + jieDate + ') · ' +
-      'Số ngày cách tiết: <strong>' + diffDays + '</strong> → ' + diffDays + '÷3 = ' + khoiVanYears + ' năm' +
-      (khoiVanMonths ? ' ' + khoiVanMonths + ' tháng' : '') + ' · ' +
-      'Khởi vận năm ' + firstDVYear + ' (' + ageTxt + ')';
-
+    // Render các ô
     let rowHtml = '';
-    dvList.forEach(dv => {
-      rowHtml += '<div class="dv-item">' +
-        '<div class="dv-age">' + dv.age + ' tuổi<span class="dv-year">' + dv.year + '</span></div>' +
-        '<div class="dv-can nh-' + nhCss(dv.nhCan) + '">' + dv.can + '</div>' +
-        '<div class="dv-chi nh-' + nhCss(dv.nhChi) + '">' + dv.chi + '</div>' +
-        '</div>';
+    dvList.forEach((dv,idx) => {
+      rowHtml += `<div class="dv-item" data-dv-index="${idx}" onclick="showDaiVanDetail(${idx})">
+        <div class="dv-age">${dv.age} tuổi<span class="dv-year">${dv.year}</span></div>
+        <div class="dv-can nh-${nhCss(dv.nhCan)}">${dv.can}</div>
+        <div class="dv-chi nh-${nhCss(dv.nhChi)}">${dv.chi}</div>
+      </div>`;
     });
     document.getElementById('dt-daivan-row').innerHTML = rowHtml;
     dvSection.style.display = 'block';
-
+    // Ẩn khung chi tiết cũ
+    document.getElementById('dv-detail-container').style.display = 'none';
+    // Lưu dvList vào window để dùng khi click
+    window.currentDaiVanList = dvList;
   } catch(err) {
-    console.error('Đại Vận error:', err);
+    console.error(err);
     dvSection.style.display = 'none';
   }
 }
 
-/* ========== QUÝ NHÂN ========== */
+/* ========== LUẬN ĐẠI VẬN KHI CLICK ========== */
+function showDaiVanDetail(index) {
+  const data = window.currentDungThanData;
+  const dvList = window.currentDaiVanList;
+  if (!data || !dvList || index >= dvList.length) return;
+  
+  const dv = dvList[index];
+  const { bz, dt1, dt2, isWeak } = data;
+  
+  // Xác định dụng thần và kỵ thần
+  const dungThanList = [dt1, dt2];
+  const kyThanList = [];
+  for (let i=0; i<5; i++) if (!dungThanList.includes(i)) kyThanList.push(i);
+  
+  // Phân tích can, chi của đại vận
+  const canHanh = dv.nhCan;
+  const chiHanh = dv.nhChi;
+  
+  const canLaDung = dungThanList.includes(canHanh);
+  const chiLaDung = dungThanList.includes(chiHanh);
+  const canLaKy = kyThanList.includes(canHanh);
+  const chiLaKy = kyThanList.includes(chiHanh);
+  
+  // Mô tả
+  let desc = `<strong>Đại vận ${dv.can} ${dv.chi} (${dv.age} tuổi, ${dv.year})</strong><br><br>`;
+  
+  // Đánh giá chung
+  if (canLaDung && chiLaDung) desc += `✅ Đại vận mang cả Thiên Can và Địa Chi đều là <strong>Dụng Thần</strong>. Đây là giai đoạn cực kỳ thuận lợi, công danh thăng tiến, tài lộc dồi dào, quý nhân phù trợ mạnh mẽ.`;
+  else if (canLaDung || chiLaDung) desc += `🌟 Đại vận có yếu tố <strong>Dụng Thần</strong> (${canLaDung?'Thiên Can '+dv.can:''}${canLaDung&&chiLaDung?' và ':''}${chiLaDung?'Địa Chi '+dv.chi:''}). Nhìn chung thuận lợi, tuy có thể gặp thử thách nhưng đều vượt qua được.`;
+  else if (canLaKy && chiLaKy) desc += `⚠️ Đại vận mang cả Thiên Can và Địa Chi đều là <strong>Kỵ Thần</strong>. Đây là thời kỳ khó khăn, dễ hao tài, công việc trì trệ, sức khỏe giảm sút, cần thận trọng.`;
+  else desc += `🔸 Đại vận có pha trộn Dụng – Kỵ Thần. Cần xem xét kỹ 5 năm đầu và 5 năm cuối.`;
+  
+  desc += `<br><br>📌 <strong>5 năm đầu (Thiên Can ${dv.can} – ${NH_NAME[canHanh]}):</strong> `;
+  if (canLaDung) desc += `Tốt đẹp, danh tiếng tăng, công việc thuận buồm xuôi gió.`;
+  else if (canLaKy) desc += `Khó khăn về mặt công danh, dễ gặp thị phi, cần khiêm tốn.`;
+  else desc += `Bình hòa, không quá nổi bật.`;
+  
+  desc += `<br>📌 <strong>5 năm cuối (Địa Chi ${dv.chi} – ${NH_NAME[chiHanh]}):</strong> `;
+  if (chiLaDung) desc += `Tốt về nội lực, gia đạo êm ấm, sức khỏe ổn định, có cơ hội tích lũy tài sản.`;
+  else if (chiLaKy) desc += `Dễ gặp biến động gia đình, sức khỏe kém, đề phòng tai nạn, hao tài ngầm.`;
+  else desc += `Bình ổn.`;
+  
+  // Tương tác với bát tự gốc (xung khắc hại hợp)
+  const interactions = [];
+  const chiIndex = dv.bi;
+  ['year','month','day','hour'].forEach(tru => {
+    const truChi = bz[tru].bi;
+    if (chiIndex === truChi) interactions.push(`Địa Chi đại vận trùng với Địa Chi trụ ${TRULBL[tru]} (Phục ngâm) – sự việc lặp lại, trì trệ.`);
+    else {
+      LUC_XUNG.forEach(pair => { if ((pair[0]===chiIndex&&pair[1]===truChi)||(pair[1]===chiIndex&&pair[0]===truChi)) interactions.push(`Xung với Địa Chi trụ ${TRULBL[tru]} – biến động lớn, dễ thay đổi chỗ ở, công việc.`); });
+      LUC_HAI.forEach(pair => { if ((pair[0]===chiIndex&&pair[1]===truChi)||(pair[1]===chiIndex&&pair[0]===truChi)) interactions.push(`Hại với Địa Chi trụ ${TRULBL[tru]} – thị phi, tiểu nhân, hao tổn ngầm.`); });
+      LUC_HOP.forEach(pair => { if ((pair[0]===chiIndex&&pair[1]===truChi)||(pair[1]===chiIndex&&pair[0]===truChi)) interactions.push(`Lục Hợp với Địa Chi trụ ${TRULBL[tru]} – hòa hợp, có quý nhân, tình cảm tốt.`); });
+    }
+  });
+  TAM_HOP.forEach(trio => { if (trio.includes(chiIndex)) interactions.push(`Địa Chi đại vận nằm trong Tam Hợp ${trio.map(i=>CHI[i]).join('-')} – tăng cường sức mạnh, cơ hội hợp tác.`); });
+  
+  if (interactions.length) {
+    desc += `<br><br>🔗 <strong>Tương tác với Bát Tự gốc:</strong><br>` + interactions.map(s=>`• ${s}`).join('<br>');
+  } else {
+    desc += `<br><br>🔗 Không có xung khắc hại hợp đặc biệt với các trụ.`;
+  }
+  
+  // Hiển thị
+  document.getElementById('dv-detail-title').innerHTML = `✨ Luận giải Đại Vận ${dv.can} ${dv.chi}`;
+  document.getElementById('dv-detail-content').innerHTML = desc;
+  document.getElementById('dv-detail-container').style.display = 'block';
+}
+
+/* ========== QUÝ NHÂN (giữ nguyên) ========== */
 function parseTime(s){
   if(!s||!s.trim()) return {h:0,min:0};
   const m = s.trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -786,25 +745,19 @@ function parseTime(s){
   if(h<0||h>23||min<0||min>59) return null;
   return {h, min};
 }
-
 function calcQuyNhan(){
   if(typeof Solar==='undefined'){ alert('Thư viện lịch lỗi.'); return; }
   document.querySelectorAll('#panel-qn .errtxt').forEach(e=>e.textContent='');
   document.querySelectorAll('#panel-qn input').forEach(i=>i.classList.remove('invalid'));
-
   const myDate = parseDateDMY(document.getElementById('myDate').value);
   const myTime = parseTime(document.getElementById('myTime').value);
   let hasErr = false;
   if(!myDate){ document.getElementById('myDate').classList.add('invalid'); document.getElementById('myErr').textContent='⚠ Ngày không hợp lệ'; hasErr=true; }
   if(!myTime){ document.getElementById('myTime').classList.add('invalid'); document.getElementById('myErr').textContent+=' ⚠ Giờ không hợp lệ'; hasErr=true; }
   if(hasErr){ document.getElementById('qn-results').style.display='none'; return; }
-
   let myBZ;
-  try{ 
-    myBZ = getBaZi(myDate.y, myDate.m, myDate.d, myTime.h, myTime.min, true);
-  }
+  try{ myBZ = getBaZi(myDate.y, myDate.m, myDate.d, myTime.h, myTime.min, true); }
   catch(e){ document.getElementById('myErr').textContent='Lỗi: '+e.message; return; }
-
   const people = [];
   for(let i=1;i<=5;i++){
     const dRaw = document.getElementById(`p${i}d`).value.trim();
@@ -819,38 +772,18 @@ function calcQuyNhan(){
     catch(e){ document.getElementById(`p${i}e`).textContent='Lỗi: '+e.message; continue; }
     people.push({idx:i, bz:pBZ});
   }
-
-  let html = `
-    <div class="my-card">
-      <h3>⭐ Bát Tự của bạn</h3>
-      <div class="bz-row">${renderPillarsQN(myBZ)}</div>
-      <div style="color:var(--muted);margin-top:4px">${baziStrQN(myBZ)}</div>
-      <div class="note-card"><strong>Thiên Ất Quý Nhân:</strong> Giáp/Mậu/Canh→Sửu,Mùi · Ất/Kỷ→Tý,Thân · Bính/Đinh→Hợi,Dậu · Tân→Ngọ,Dần · Nhâm/Quý→Mão,Tỵ<br>
-      🟡 Vàng = bạn là quý nhân · 🔵 Xanh = người là quý nhân của bạn</div>
-    </div>`;
-
-  if(people.length===0){
-    html += `<div class="card" style="text-align:center;padding:30px">Chưa có thông tin người cần xem.</div>`;
-  } else {
+  let html = `<div class="my-card"><h3>⭐ Bát Tự của bạn</h3><div class="bz-row">${renderPillarsQN(myBZ)}</div><div style="color:var(--muted);margin-top:4px">${baziStrQN(myBZ)}</div><div class="note-card"><strong>Thiên Ất Quý Nhân:</strong> Giáp/Mậu/Canh→Sửu,Mùi · Ất/Kỷ→Tý,Thân · Bính/Đinh→Hợi,Dậu · Tân→Ngọ,Dần · Nhâm/Quý→Mão,Tỵ<br>🟡 Vàng = bạn là quý nhân · 🔵 Xanh = người là quý nhân của bạn</div></div>`;
+  if(people.length===0) html += `<div class="card" style="text-align:center;padding:30px">Chưa có thông tin người cần xem.</div>`;
+  else {
     people.forEach(p=>{
       const cmp = compareQN(myBZ, p.bz);
-      html += `
-        <div class="pcard">
-          <div class="pcard-hd"><span class="badge">Người ${p.idx}</span> ${baziStrQN(p.bz)}</div>
-          <div class="bz-row">${renderPillarsQN(p.bz, cmp.bHit, cmp.aHit)}</div>
-          <div class="cmp-grid">
-            ${renderPctQN(cmp.aPercent,cmp.aCount,'🌟 Quý nhân của <strong>bạn</strong><br>đối với người này',cmp.aHit)}
-            ${renderPctQN(cmp.bPercent,cmp.bCount,'🌟 Quý nhân của người này<br>đối với <strong>bạn</strong>',cmp.bHit)}
-          </div>
-          <div class="sum-line">Tổng: <strong>${cmp.aCount+cmp.bCount} chữ</strong> · Bạn→Người: ${cmp.aCount} (${cmp.aPercent}%) · Người→Bạn: ${cmp.bCount} (${cmp.bPercent}%)</div>
-        </div>`;
+      html += `<div class="pcard"><div class="pcard-hd"><span class="badge">Người ${p.idx}</span> ${baziStrQN(p.bz)}</div><div class="bz-row">${renderPillarsQN(p.bz, cmp.bHit, cmp.aHit)}</div><div class="cmp-grid">${renderPctQN(cmp.aPercent,cmp.aCount,'🌟 Quý nhân của <strong>bạn</strong><br>đối với người này',cmp.aHit)}${renderPctQN(cmp.bPercent,cmp.bCount,'🌟 Quý nhân của người này<br>đối với <strong>bạn</strong>',cmp.bHit)}</div><div class="sum-line">Tổng: <strong>${cmp.aCount+cmp.bCount} chữ</strong> · Bạn→Người: ${cmp.aCount} (${cmp.aPercent}%) · Người→Bạn: ${cmp.bCount} (${cmp.bPercent}%)</div></div>`;
     });
   }
   document.getElementById('qn-results').innerHTML = html;
   document.getElementById('qn-results').style.display = 'block';
   setTimeout(()=> document.getElementById('qn-results').scrollIntoView({behavior:'smooth',block:'start'}), 80);
 }
-
 function compareQN(myBZ, pBZ){
   const aHit=[], bHit=[];
   ORDER_QN.forEach(p=>{
@@ -870,9 +803,44 @@ function renderPctQN(pct, count, label, hits){
   return `<div class="pct-box"><div class="pct-lbl">${label}</div><div class="pct-val">${pct}%</div><div class="pct-bar"><div class="pct-fill" style="width:${pct}%"></div></div><div class="pct-stars">${STARS[count]}</div>${hits.length?`<div class="pct-hits">Khớp: ${hits.map(h=>TRULBL[h]).join(', ')}</div>`:''}</div>`;
 }
 
+/* ========== TẢI GỢI Ý ========== */
+async function fetchSuggestionsFromGitHub() {
+  const infoEl = document.getElementById('data-source-info');
+  try {
+    const resp = await fetch(GITHUB_RAW_URL);
+    if (!resp.ok) throw new Error();
+    const text = await resp.text();
+    uploadedSuggestions = parseSuggestionsFromText(text);
+    infoEl.textContent = '✅ Đã tải dữ liệu gợi ý từ GitHub.';
+  } catch(e) {
+    uploadedSuggestions = null;
+    infoEl.textContent = 'ℹ️ Sử dụng gợi ý mặc định.';
+  }
+}
+function parseSuggestionsFromText(text) {
+  const map = new Map();
+  const lines = text.split('\n');
+  for (let i=0; i<lines.length; i++) {
+    const line = lines[i].trim();
+    const m = line.match(/^Dụng thần\s+(Mộc|Hỏa|Thổ|Kim|Thủy)\s*$/i);
+    if (m) {
+      const hanh = m[1]; let j = i+1, contentLines = [];
+      while (j < lines.length && !lines[j].trim().match(/^Dụng thần\s+(Mộc|Hỏa|Thổ|Kim|Thủy)\s*$/i)) contentLines.push(lines[j++]);
+      const content = contentLines.join('\n').trim();
+      if (content) map.set(hanh, content);
+      i = j-1;
+    }
+  }
+  return map;
+}
+function getSuggestionContent(hanhIndex) {
+  const hanhName = NH_NAME[hanhIndex];
+  if (uploadedSuggestions && uploadedSuggestions.has(hanhName)) return uploadedSuggestions.get(hanhName);
+  return DEFAULT_SUGGESTIONS[hanhIndex] || '';
+}
+
 /* ========== KHỞI TẠO ========== */
 window.addEventListener('DOMContentLoaded', ()=>{
-  // Tạo input động cho tab Quý Nhân
   const cont = document.getElementById('pInputs');
   for(let i=1;i<=5;i++){
     cont.innerHTML += `
@@ -885,11 +853,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
         <div class="errtxt" id="p${i}e" style="padding-left:44px"></div>
       </div>`;
   }
-
-  // Gắn mask cho tất cả input ngày
   setupDateInputs();
-
-  // Tải gợi ý
   fetchSuggestionsFromGitHub();
 });
 </script>
