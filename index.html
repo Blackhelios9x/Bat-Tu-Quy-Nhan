@@ -327,7 +327,7 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
 
         <!-- Đại Vận — hiển thị ngay bên dưới bát tự -->
         <div class="daivan-section" id="dt-daivan-section" style="display:none">
-          <div class="daivan-hd">🔮 Đại Vận (8 bước × 10 năm) — <span style="font-weight:400;font-size:.8rem;">Click vào từng vận để xem luận giải</span></div>
+          <div class="daivan-hd">🔮 Đại Vận (8 bước × 10 năm) — <span style="font-weight:400;font-size:.8rem;">Click vào từng vận để xem luận giải chi tiết</span></div>
           <div class="daivan-meta" id="dt-daivan-meta"></div>
           <div class="daivan-row" id="dt-daivan-row"></div>
           <!-- Khung chi tiết đại vận khi click -->
@@ -450,16 +450,14 @@ function switchTab(id){
   document.getElementById('panel-'+id).classList.add('active');
 }
 
-/* ========== MASK INPUT NGÀY (ĐÃ SỬA LỖI NHẢY) ========== */
+/* ========== MASK INPUT NGÀY ========== */
 function setupDateInputs() {
   const dateInputs = document.querySelectorAll('input[data-mask="date"]');
   
   dateInputs.forEach(input => {
-    // Khởi tạo
     if (!input.value) input.value = '__/__/____';
     else input.value = formatDateString(input.value);
     
-    // Xử lý sự kiện input
     input.addEventListener('input', function(e) {
       const raw = this.value.replace(/[^0-9]/g, '').substring(0,8);
       let formatted = '';
@@ -467,27 +465,19 @@ function setupDateInputs() {
       if (raw.length >= 3) formatted += '/' + raw.substring(2,4);
       if (raw.length >= 5) formatted += '/' + raw.substring(4,8);
       
-      // Giữ lại các ký tự gạch dưới nếu chưa đủ dài
-      const oldLen = this.value.length;
       this.value = formatted || '__/__/____';
       
-      // Đặt lại con trỏ
-      const newLen = this.value.length;
       let caretPos = this.selectionStart;
-      
-      // Nếu đang ở vị trí dấu '/' thì nhảy qua
       if (this.value[caretPos] === '/') caretPos++;
       this.setSelectionRange(caretPos, caretPos);
     });
 
-    // Xử lý keydown để ngăn xóa dấu '/'
     input.addEventListener('keydown', function(e) {
       const key = e.key;
       const cursorPos = this.selectionStart;
       const value = this.value;
       
       if (key === 'Backspace') {
-        // Nếu con trỏ ngay sau dấu '/' hoặc ở vị trí 3,6 thì bỏ qua không xóa '/'
         if (cursorPos > 0 && (value[cursorPos-1] === '/' || cursorPos === 3 || cursorPos === 6)) {
           e.preventDefault();
           this.setSelectionRange(cursorPos-1, cursorPos-1);
@@ -501,7 +491,6 @@ function setupDateInputs() {
       }
     });
 
-    // Xử lý paste: chỉ lấy số, tự định dạng
     input.addEventListener('paste', function(e) {
       e.preventDefault();
       const pasted = (e.clipboardData || window.clipboardData).getData('text');
@@ -694,66 +683,145 @@ function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
   }
 }
 
-/* ========== LUẬN ĐẠI VẬN KHI CLICK ========== */
+/* ========== LUẬN ĐẠI VẬN CHUYÊN SÂU ========== */
 function showDaiVanDetail(index) {
   const data = window.currentDungThanData;
   const dvList = window.currentDaiVanList;
   if (!data || !dvList || index >= dvList.length) return;
   
   const dv = dvList[index];
-  const { bz, dt1, dt2, isWeak } = data;
+  const { bz, dt1, dt2, isWeak, nhCan } = data;
   
-  const dungThanList = [dt1, dt2];
-  const kyThanList = [];
-  for (let i=0; i<5; i++) if (!dungThanList.includes(i)) kyThanList.push(i);
-  
-  const canHanh = dv.nhCan;
-  const chiHanh = dv.nhChi;
-  
-  const canLaDung = dungThanList.includes(canHanh);
-  const chiLaDung = dungThanList.includes(chiHanh);
-  const canLaKy = kyThanList.includes(canHanh);
-  const chiLaKy = kyThanList.includes(chiHanh);
-  
-  let desc = `<strong>Đại vận ${dv.can} ${dv.chi} (${dv.age} tuổi, ${dv.year})</strong><br><br>`;
-  
-  if (canLaDung && chiLaDung) desc += `✅ Đại vận mang cả Thiên Can và Địa Chi đều là <strong>Dụng Thần</strong>. Đây là giai đoạn cực kỳ thuận lợi, công danh thăng tiến, tài lộc dồi dào, quý nhân phù trợ mạnh mẽ.`;
-  else if (canLaDung || chiLaDung) desc += `🌟 Đại vận có yếu tố <strong>Dụng Thần</strong> (${canLaDung?'Thiên Can '+dv.can:''}${canLaDung&&chiLaDung?' và ':''}${chiLaDung?'Địa Chi '+dv.chi:''}). Nhìn chung thuận lợi, tuy có thể gặp thử thách nhưng đều vượt qua được.`;
-  else if (canLaKy && chiLaKy) desc += `⚠️ Đại vận mang cả Thiên Can và Địa Chi đều là <strong>Kỵ Thần</strong>. Đây là thời kỳ khó khăn, dễ hao tài, công việc trì trệ, sức khỏe giảm sút, cần thận trọng.`;
-  else desc += `🔸 Đại vận có pha trộn Dụng – Kỵ Thần. Cần xem xét kỹ 5 năm đầu và 5 năm cuối.`;
-  
-  desc += `<br><br>📌 <strong>5 năm đầu (Thiên Can ${dv.can} – ${NH_NAME[canHanh]}):</strong> `;
-  if (canLaDung) desc += `Tốt đẹp, danh tiếng tăng, công việc thuận buồm xuôi gió.`;
-  else if (canLaKy) desc += `Khó khăn về mặt công danh, dễ gặp thị phi, cần khiêm tốn.`;
-  else desc += `Bình hòa, không quá nổi bật.`;
-  
-  desc += `<br>📌 <strong>5 năm cuối (Địa Chi ${dv.chi} – ${NH_NAME[chiHanh]}):</strong> `;
-  if (chiLaDung) desc += `Tốt về nội lực, gia đạo êm ấm, sức khỏe ổn định, có cơ hội tích lũy tài sản.`;
-  else if (chiLaKy) desc += `Dễ gặp biến động gia đình, sức khỏe kém, đề phòng tai nạn, hao tài ngầm.`;
-  else desc += `Bình ổn.`;
-  
-  const interactions = [];
-  const chiIndex = dv.bi;
-  ['year','month','day','hour'].forEach(tru => {
-    const truChi = bz[tru].bi;
-    if (chiIndex === truChi) interactions.push(`Địa Chi đại vận trùng với Địa Chi trụ ${TRULBL[tru]} (Phục ngâm) – sự việc lặp lại, trì trệ.`);
-    else {
-      LUC_XUNG.forEach(pair => { if ((pair[0]===chiIndex&&pair[1]===truChi)||(pair[1]===chiIndex&&pair[0]===truChi)) interactions.push(`Xung với Địa Chi trụ ${TRULBL[tru]} – biến động lớn, dễ thay đổi chỗ ở, công việc.`); });
-      LUC_HAI.forEach(pair => { if ((pair[0]===chiIndex&&pair[1]===truChi)||(pair[1]===chiIndex&&pair[0]===truChi)) interactions.push(`Hại với Địa Chi trụ ${TRULBL[tru]} – thị phi, tiểu nhân, hao tổn ngầm.`); });
-      LUC_HOP.forEach(pair => { if ((pair[0]===chiIndex&&pair[1]===truChi)||(pair[1]===chiIndex&&pair[0]===truChi)) interactions.push(`Lục Hợp với Địa Chi trụ ${TRULBL[tru]} – hòa hợp, có quý nhân, tình cảm tốt.`); });
-    }
-  });
-  TAM_HOP.forEach(trio => { if (trio.includes(chiIndex)) interactions.push(`Địa Chi đại vận nằm trong Tam Hợp ${trio.map(i=>CHI[i]).join('-')} – tăng cường sức mạnh, cơ hội hợp tác.`); });
-  
-  if (interactions.length) {
-    desc += `<br><br>🔗 <strong>Tương tác với Bát Tự gốc:</strong><br>` + interactions.map(s=>`• ${s}`).join('<br>');
-  } else {
-    desc += `<br><br>🔗 Không có xung khắc hại hợp đặc biệt với các trụ.`;
-  }
+  // Tạo văn bản luận giải
+  const desc = generateDaiVanDescription(bz, dv, { dt1, dt2, isWeak, nhCan });
   
   document.getElementById('dv-detail-title').innerHTML = `✨ Luận giải Đại Vận ${dv.can} ${dv.chi}`;
   document.getElementById('dv-detail-content').innerHTML = desc;
   document.getElementById('dv-detail-container').style.display = 'block';
+}
+
+// Hàm tạo mô tả chi tiết dựa trên luật Ngũ Hành và Dụng/Kỵ
+function generateDaiVanDescription(bz, dv, dungThanInfo) {
+  const { dt1, dt2, isWeak, nhCan } = dungThanInfo;
+  const nhName = NH_NAME[nhCan];
+  const dungList = [dt1, dt2];
+  const kyList = [0,1,2,3,4].filter(i => !dungList.includes(i));
+  
+  const canHanh = dv.nhCan;
+  const chiHanh = dv.nhChi;
+  const canLaDung = dungList.includes(canHanh);
+  const chiLaDung = dungList.includes(chiHanh);
+  const canLaKy = kyList.includes(canHanh);
+  const chiLaKy = kyList.includes(chiHanh);
+  
+  // Kiểm tra sự hiện diện của hành hỗ trợ trong Bát Tự gốc (cả can và chi)
+  function hasHanh(hanhIdx) {
+    return (bz.year.nhCan === hanhIdx || bz.month.nhCan === hanhIdx || bz.day.nhCan === hanhIdx || bz.hour.nhCan === hanhIdx ||
+            bz.year.nhChi === hanhIdx || bz.month.nhChi === hanhIdx || bz.day.nhChi === hanhIdx || bz.hour.nhChi === hanhIdx);
+  }
+  
+  let desc = `<strong>Đại vận ${dv.can} ${dv.chi} (${dv.age} – ${dv.age+9} tuổi, ${dv.year} – ${dv.year+9})</strong><br><br>`;
+  
+  // Phân tích tổng quan dựa trên tương tác Ngũ Hành
+  const sinhNhCan = SINH[nhCan];
+  const khacNhCan = KHAC[nhCan];
+  const tiethao = SINH.indexOf(nhCan); // hành mà nhCan sinh ra
+  const duocSinh = SINH[nhCan];
+  
+  // Xác định tính chất đại vận đối với Nhật Chủ
+  let vanTacDong = '';
+  if (canHanh === duocSinh || chiHanh === duocSinh) vanTacDong = 'Sinh (tăng cường)';
+  else if (canHanh === nhCan || chiHanh === nhCan) vanTacDong = 'Phù (hỗ trợ)';
+  else if (canHanh === tiethao || chiHanh === tiethao) vanTacDong = 'Tiết (hao tổn)';
+  else if (canHanh === khacNhCan || chiHanh === khacNhCan) vanTacDong = 'Khắc (áp chế)';
+  else vanTacDong = 'Hao (làm yếu)';
+  
+  // Đoạn mở đầu phân tích chung
+  desc += `Nhật Chủ <strong>${CAN[bz.day.si]} Mộc</strong> (hành ${nhName}), hiện tại <strong>${isWeak ? 'Thân Nhược' : 'Thân Vượng'}</strong>. `;
+  desc += `Đại vận mang hành <strong>${NH_NAME[canHanh]}</strong> (Thiên Can) và <strong>${NH_NAME[chiHanh]}</strong> (Địa Chi). `;
+  
+  // Phân tích tác dụng của đại vận dựa trên Dụng/Kỵ
+  if (canLaDung && chiLaDung) {
+    desc += `Cả Thiên Can và Địa Chi đều là <strong>Dụng Thần</strong>. Đây là giai đoạn cực kỳ thuận lợi, giúp cân bằng Bát Tự. `;
+  } else if (canLaDung || chiLaDung) {
+    desc += `Đại vận có yếu tố <strong>Dụng Thần</strong> (${canLaDung ? 'Thiên Can' : 'Địa Chi'}). Nhìn chung thuận lợi nhưng vẫn cần lưu ý yếu tố Kỵ Thần. `;
+  } else if (canLaKy && chiLaKy) {
+    desc += `Cả Thiên Can và Địa Chi đều là <strong>Kỵ Thần</strong>, làm trầm trọng thêm sự mất cân bằng. Cần thận trọng. `;
+  } else {
+    desc += `Đại vận pha trộn Dụng – Kỵ Thần, tạo ra những biến động trái chiều. `;
+  }
+  
+  // Mô tả chi tiết dựa trên tình huống điển hình
+  if (isWeak) {
+    // Thân nhược
+    if (nhCan === 0 || nhCan === 1) { // Giáp, Ất Mộc
+      if (canHanh === 1 || chiHanh === 1) { // Hỏa vận
+        const coThuy = hasHanh(4); // Kiểm tra có Thủy không
+        desc += `<br><br>🌲 <strong>Giáp/Ất Mộc nhược gặp Hỏa vận (Thực Thương):</strong><br>`;
+        if (coThuy) {
+          desc += `✅ <strong>ĐẠI CÁT – Bước ngoặt cuộc đời.</strong> Bát Tự có Thủy (Ấn Tinh) cứu giải. Hỏa khắc chế được Kim (Quan Sát – kẻ thù của Mộc nhược), lại có Thủy dưỡng Mộc. `;
+          desc += `Công danh thăng tiến mạnh mẽ, tài năng được phát huy, thoát khỏi áp lực, bệnh tật tiêu tan. Quý nhân phù trợ rõ rệt.`;
+        } else {
+          desc += `⚠️ <strong>CÁT HUNG ĐAN XEN – Vất vả mới thành công.</strong> Bát Tự không có Thủy, Mộc khô gặp Hỏa dễ bị thiêu đốt. `;
+          desc += `Áp lực công việc (Kim) giảm bớt nhưng sức khỏe hao tổn, dễ kiệt sức, làm nhiều hưởng ít. Cần bổ sung hành Thủy (màu đen, xanh dương, hướng Bắc).`;
+        }
+      } else if (canHanh === 4 || chiHanh === 4) { // Thủy vận
+        desc += `<br><br>💧 <strong>Mộc nhược gặp Thủy vận (Ấn Tinh):</strong> Đây là Dụng Thần tối quan trọng. Cây được tưới nước, sinh trưởng mạnh mẽ. `;
+        desc += `Cực kỳ tốt đẹp: công danh vững chắc, quý nhân nâng đỡ, học hành thi cử đỗ đạt, sức khỏe dồi dào.`;
+      }
+    } else if (nhCan === 2 || nhCan === 3) { // Bính, Đinh Hỏa nhược
+      if (canHanh === 0 || chiHanh === 0) { // Mộc vận
+        desc += `<br><br>🌳 <strong>Hỏa nhược gặp Mộc vận (Ấn Tinh):</strong> Dụng Thần sinh vượng, thêm dầu vào lửa. Vận khí hanh thông, danh tiếng vang xa, có quý nhân là người lớn tuổi hoặc cấp trên giúp đỡ.`;
+      }
+    }
+    // Các trường hợp khác tương tự, ở đây chỉ minh họa một số điển hình
+  } else {
+    // Thân vượng
+    if (nhCan === 0 || nhCan === 1) { // Mộc vượng
+      if (canHanh === 3 || chiHanh === 3) { // Kim vận
+        desc += `<br><br>⚔️ <strong>Mộc vượng gặp Kim vận (Quan Sát):</strong> Dụng Thần khắc chế, cây lớn bị đốn tỉa. `;
+        desc += `Công danh có bước ngoặt, tăng quyền lực nhưng cũng đầy áp lực. Nếu Kim quá nhiều dễ bị tiểu nhân hãm hại. Cần xem có Hỏa chế Kim không.`;
+      }
+    }
+  }
+  
+  // Bổ sung đánh giá 5 năm đầu và cuối
+  desc += `<br><br>📌 <strong>5 năm đầu (Thiên Can ${dv.can}):</strong> `;
+  if (canLaDung) desc += `Tốt đẹp về mặt công danh, danh tiếng, sự nghiệp bề nổi.`;
+  else if (canLaKy) desc += `Dễ gặp khó khăn trong giao tiếp, công việc trì trệ, thị phi.`;
+  else desc += `Bình hòa, không có đột phá lớn.`;
+  
+  desc += `<br>📌 <strong>5 năm cuối (Địa Chi ${dv.chi}):</strong> `;
+  if (chiLaDung) desc += `Tốt về nội bộ, gia đình, sức khỏe và tài sản ngầm.`;
+  else if (chiLaKy) desc += `Coi chừng biến động gia đạo, sức khỏe giảm sút, hao tài tốn của.`;
+  else desc += `Ổn định, ít biến cố.`;
+  
+  // Tương tác Địa Chi
+  const interactions = [];
+  const chiIndex = dv.bi;
+  ['year','month','day','hour'].forEach(tru => {
+    const truChi = bz[tru].bi;
+    if (chiIndex === truChi) interactions.push(`Phục ngâm với trụ ${TRULBL[tru]} (sự việc lặp lại, trì trệ).`);
+    LUC_XUNG.forEach(p => { if ((p[0]===chiIndex&&p[1]===truChi)||(p[1]===chiIndex&&p[0]===truChi)) interactions.push(`Xung với trụ ${TRULBL[tru]} (biến động, thay đổi).`); });
+    LUC_HAI.forEach(p => { if ((p[0]===chiIndex&&p[1]===truChi)||(p[1]===chiIndex&&p[0]===truChi)) interactions.push(`Hại với trụ ${TRULBL[tru]} (thị phi, hao tổn ngầm).`); });
+    LUC_HOP.forEach(p => { if ((p[0]===chiIndex&&p[1]===truChi)||(p[1]===chiIndex&&p[0]===truChi)) interactions.push(`Lục Hợp với trụ ${TRULBL[tru]} (hòa hợp, quý nhân).`); });
+  });
+  
+  if (interactions.length) {
+    desc += `<br><br>🔗 <strong>Tương tác Địa Chi với Bát Tự gốc:</strong><br>` + interactions.map(s=>`• ${s}`).join('<br>');
+  }
+  
+  // Lời khuyên chung
+  desc += `<br><br>💡 <strong>Lời khuyên:</strong> `;
+  if (isWeak) {
+    if (dungList.includes(canHanh) || dungList.includes(chiHanh)) desc += `Hãy tận dụng cơ hội để phát triển, học tập, mở rộng quan hệ. Nên dùng màu sắc và vật phẩm thuộc hành ${NH_NAME[dt1]}, ${NH_NAME[dt2]}.`;
+    else desc += `Giai đoạn khó khăn, nên thủ thế, giữ gìn sức khỏe, tránh đầu tư mạo hiểm. Bổ sung hành ${NH_NAME[dt1]}, ${NH_NAME[dt2]} để cân bằng.`;
+  } else {
+    if (dungList.includes(canHanh) || dungList.includes(chiHanh)) desc += `Thời cơ tốt để bứt phá, thể hiện năng lực, nhưng cần khiêm tốn, tránh chủ quan.`;
+    else desc += `Nên tiết chế, chia sẻ, tránh tranh chấp. Tăng cường hành ${NH_NAME[dt1]}, ${NH_NAME[dt2]} để hóa giải.`;
+  }
+  
+  return desc;
 }
 
 /* ========== QUÝ NHÂN ========== */
