@@ -370,11 +370,61 @@ function nhCss(nh){ return nh>=0 ? NH_CSS[nh] : ''; }
 function nhLabel(nh){ return `<span class="nh-tag sm ${nhCss(nh)}">${NH_NAME[nh]}</span>`; }
 function trungHoacSinh(nhA, nhB){ return nhB===nhA || SINH[nhB]===nhA; }
 
-function getBaZi(y,m,d,h,mi){
-  const solar = Solar.fromYmdHms(y,m,d,h,mi,0);
-  const ec = solar.getLunar().getEightChar();
-  return { year:parseGZ(ec.getYear()), month:parseGZ(ec.getMonth()), day:parseGZ(ec.getDay()), hour:parseGZ(ec.getTime()) };
+// Hàm tính can chi tháng âm lịch (từ mùng 1) theo quy tắc Ngũ Hổ Độn
+function getLunarMonthGanIndex(yearGan, month) {
+  // month: 1-12
+  const firstMonthGanMap = {
+    0: 2,  // Giáp -> Bính
+    5: 2,  // Kỷ   -> Bính
+    1: 4,  // Ất   -> Mậu
+    6: 4,  // Canh -> Mậu
+    2: 6,  // Bính -> Canh
+    7: 6,  // Tân  -> Canh
+    3: 8,  // Đinh -> Nhâm
+    8: 8,  // Nhâm -> Nhâm
+    4: 0,  // Mậu  -> Giáp
+    9: 0   // Quý  -> Giáp
+  };
+  const firstGan = firstMonthGanMap[yearGan];
+  return (firstGan + month - 1) % 10;
 }
+
+// Lấy Bát Tự, có thể chọn dùng tháng âm lịch (từ mùng 1) hoặc tháng tiết khí
+function getBaZi(y, m, d, h, mi, useLunarMonth = true) {
+  const solar = Solar.fromYmdHms(y, m, d, h, mi, 0);
+  const lunar = solar.getLunar();
+  const ec = lunar.getEightChar(); // Bát Tự theo tiết khí
+  
+  let bz = {
+    year: parseGZ(ec.getYear()),
+    month: parseGZ(ec.getMonth()),
+    day: parseGZ(ec.getDay()),
+    hour: parseGZ(ec.getTime())
+  };
+  
+  if (useLunarMonth) {
+    // Lưu tháng tiết khí để dùng tính Đại Vận
+    bz.monthTietKhi = { ...bz.month };
+    
+    const lunarMonth = lunar.getMonth(); // có thể âm nếu nhuận
+    const absMonth = Math.abs(lunarMonth);
+    const yearGanIndex = lunar.getYearGanIndex();
+    const monthGanIndex = getLunarMonthGanIndex(yearGanIndex, absMonth);
+    const monthZhiIndex = (absMonth + 1) % 12; // tháng 1 → Dần (2)
+    
+    bz.month = {
+      si: monthGanIndex,
+      bi: monthZhiIndex,
+      can: CAN[monthGanIndex],
+      chi: CHI[monthZhiIndex],
+      nhCan: NH_CAN[monthGanIndex],
+      nhChi: NH_CHI[monthZhiIndex]
+    };
+  }
+  
+  return bz;
+}
+
 function parseGZ(gz){
   const si=CAN_HAN.indexOf(gz[0]), bi=CHI_HAN.indexOf(gz[1]);
   return { si,bi, can:si>=0?CAN[si]:'?', chi:bi>=0?CHI[bi]:'?', nhCan:si>=0?NH_CAN[si]:-1, nhChi:bi>=0?NH_CHI[bi]:-1 };
@@ -462,7 +512,9 @@ function calcDungThan(){
   const { d, m, y } = parsed;
   const h = Number(document.getElementById('dt-hour').value);
   let bz; 
-  try { bz = getBaZi(y, m, d, h, 0); } 
+  try { 
+    bz = getBaZi(y, m, d, h, 0, true); // dùng tháng âm lịch
+  } 
   catch(e) { document.getElementById('dt-err').textContent = 'Lỗi: '+e; return; }
 
   const nhA = bz.day.nhCan;
@@ -481,7 +533,7 @@ function calcDungThan(){
 
   renderBaZiTable(bz);
 
-  // Đọc giới tính & tính Đại Vận
+  // Đọc giới tính & tính Đại Vận (dùng tháng tiết khí đã lưu)
   const isMale = document.querySelector('input[name="dt-gender"]:checked').value === 'male';
   renderDaiVan(bz, y, m, d, isMale);
   
@@ -546,23 +598,7 @@ function renderBaZiTable(bz){
   document.getElementById('dt-nh-ref').innerHTML=ref;
 }
 
-/* =====================================================
-   ĐẠI VẬN — TÍNH VÀ RENDER
-   -------------------------------------------------------
-   LOGIC:
-   • Can năm Dương (Giáp/Bính/Mậu/Canh/Nhâm = index chẵn):
-       Nam-Dương hoặc Nữ-Âm → Thuận vận (đếm tiến đến tiết sau)
-       Nam-Âm   hoặc Nữ-Dương → Nghịch vận (đếm lùi đến tiết trước)
-   • Số ngày từ ngày sinh đến tiết tham chiếu ÷ 3 = Khởi vận (năm)
-       1 ngày dư = 4 tháng; 2 ngày dư = 8 tháng
-   • Năm ĐV = Năm sinh dương lịch + Khởi vận
-   • Tuổi ĐV = Năm ĐV − Năm sinh âm lịch (can chi năm)
-       Ví dụ: sinh 15/01/1990 → năm âm lịch 1989 (Kỷ Tỵ)
-              9 ngày ÷ 3 = 3 năm → năm ĐV đầu = 1990+3 = 1993
-              Tuổi = 1993−1989 = 4 tuổi ✓
-===================================================== */
-
-/* Tìm vị trí (0-59) của một can-chi trong vòng 60 */
+/* ========== ĐẠI VẬN (dùng tháng tiết khí) ========== */
 function ganzhi60pos(si, bi) {
   for (let k = 0; k < 60; k++) {
     if (k % 10 === si && k % 12 === bi) return k;
@@ -570,12 +606,9 @@ function ganzhi60pos(si, bi) {
   return 0;
 }
 
-/* Lấy năm can-chi từ can-chi trụ Năm, gần với năm sinh dương lịch nhất */
 function getChineseBirthYear(si, bi, birthY) {
-  // Cơ sở: 1984 = Giáp Tý (si=0, bi=0) = vị trí 0
   const pos  = ganzhi60pos(si, bi);
   let year   = 1984 + pos;
-  // Điều chỉnh cho gần birthY (và ≤ birthY, vì năm can-chi có thể = birthY−1)
   while (year > birthY)       year -= 60;
   while (year + 60 <= birthY) year += 60;
   return year;
@@ -584,16 +617,14 @@ function getChineseBirthYear(si, bi, birthY) {
 function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
   const dvSection = document.getElementById('dt-daivan-section');
   try {
-    /* ---- 1. Xác định chiều thuận / nghịch ---- */
-    // Can năm index chẵn = Dương (Giáp/Bính/Mậu/Canh/Nhâm)
+    // Dùng tháng tiết khí để tính đại vận
+    const monthForDaivan = bz.monthTietKhi || bz.month;
+    
     const isYangYear = bz.year.si % 2 === 0;
-    // Thuận: Nam-Dương năm || Nữ-Âm năm
     const isThuanVan = (isMale && isYangYear) || (!isMale && !isYangYear);
 
-    /* ---- 2. Năm sinh theo can-chi (âm lịch can chi) ---- */
     const chineseBirthYear = getChineseBirthYear(bz.year.si, bz.year.bi, birthY);
 
-    /* ---- 3. Tìm tiết tham chiếu qua thư viện ---- */
     const birthSolar = Solar.fromYmd(birthY, birthM, birthD);
     const lunar      = birthSolar.getLunar();
     let targetJie;
@@ -605,25 +636,18 @@ function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
 
     const jieSolar = targetJie.getSolar();
 
-    /* ---- 4. Đếm số ngày (lấy theo ngày dương lịch, bỏ qua giờ) ---- */
     const d1       = new Date(birthY, birthM - 1, birthD);
     const d2       = new Date(jieSolar.getYear(), jieSolar.getMonth() - 1, jieSolar.getDay());
     const diffDays = Math.round(Math.abs(d2 - d1) / 86400000);
 
-    /* ---- 5. Tính Khởi Vận ---- */
-    const khoiVanYears  = Math.floor(diffDays / 3);   // số tuổi (dương lịch) khởi vận
+    const khoiVanYears  = Math.floor(diffDays / 3);
     const remDays       = diffDays % 3;
-    const khoiVanMonths = remDays * 4;                 // 0, 4, hoặc 8 tháng
+    const khoiVanMonths = remDays * 4;
 
-    /* ---- 6. Năm ĐV đầu tiên & tuổi hiển thị ---- */
-    // Năm ĐV = năm sinh dương lịch + khởi vận năm
     const firstDVYear = birthY + khoiVanYears;
-    // Tuổi hiển thị = Năm ĐV − Năm sinh âm lịch can-chi
-    // VD: 1990+3=1993, 1993−1989=4 tuổi ✓
     const firstDVAge  = firstDVYear - chineseBirthYear;
 
-    /* ---- 7. Sắp 8 can-chi đại vận (thuận / nghịch từ trụ Tháng) ---- */
-    const mSi = bz.month.si, mBi = bz.month.bi;
+    const mSi = monthForDaivan.si, mBi = monthForDaivan.bi;
     const dvList = [];
     for (let n = 1; n <= 8; n++) {
       let si, bi;
@@ -635,7 +659,7 @@ function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
         bi = ((mBi - n) % 12 + 12) % 12;
       }
       const dvYear = firstDVYear + (n - 1) * 10;
-      const dvAge  = dvYear - chineseBirthYear; // tuổi tính theo năm can-chi
+      const dvAge  = dvYear - chineseBirthYear;
       dvList.push({
         si, bi,
         can:   CAN[si],    chi:   CHI[bi],
@@ -645,7 +669,6 @@ function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
       });
     }
 
-    /* ---- 8. Render dòng meta ---- */
     const jieName  = targetJie.getName ? targetJie.getName() : '';
     const jieDate  = jieSolar.getDay() + '/' + jieSolar.getMonth() + '/' + jieSolar.getYear();
     const khoiTxt  = khoiVanYears + ' tuổi' + (khoiVanMonths ? ' ' + khoiVanMonths + ' tháng' : '');
@@ -659,7 +682,6 @@ function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
       (khoiVanMonths ? ' ' + khoiVanMonths + ' tháng' : '') + ' · ' +
       'Khởi vận năm ' + firstDVYear + ' (' + ageTxt + ')';
 
-    /* ---- 9. Render 8 ô đại vận ---- */
     let rowHtml = '';
     dvList.forEach(dv => {
       rowHtml += '<div class="dv-item">' +
@@ -677,7 +699,7 @@ function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
   }
 }
 
-/* ========== QUÝ NHÂN (giữ nguyên parse dd/mm/yyyy) ========== */
+/* ========== QUÝ NHÂN ========== */
 function parseTime(s){
   if(!s||!s.trim()) return {h:0,min:0};
   const m = s.trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -700,7 +722,9 @@ function calcQuyNhan(){
   if(hasErr){ document.getElementById('qn-results').style.display='none'; return; }
 
   let myBZ;
-  try{ myBZ = getBaZi(myDate.y, myDate.m, myDate.d, myTime.h, myTime.min); }
+  try{ 
+    myBZ = getBaZi(myDate.y, myDate.m, myDate.d, myTime.h, myTime.min, true);
+  }
   catch(e){ document.getElementById('myErr').textContent='Lỗi: '+e.message; return; }
 
   const people = [];
@@ -713,7 +737,7 @@ function calcQuyNhan(){
     const pt = parseTime(tRaw);
     if(tRaw && !pt){ document.getElementById(`p${i}t`).classList.add('invalid'); document.getElementById(`p${i}e`).textContent='⚠ Giờ không hợp lệ'; continue; }
     let pBZ;
-    try{ pBZ = getBaZi(pd.y, pd.m, pd.d, pt?pt.h:0, pt?pt.min:0); }
+    try{ pBZ = getBaZi(pd.y, pd.m, pd.d, pt?pt.h:0, pt?pt.min:0, true); }
     catch(e){ document.getElementById(`p${i}e`).textContent='Lỗi: '+e.message; continue; }
     people.push({idx:i, bz:pBZ});
   }
