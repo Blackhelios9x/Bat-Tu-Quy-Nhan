@@ -343,9 +343,8 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
     </div>
   </div>
 
-  <!-- ========== TAB QUÝ NHÂN (giữ nguyên) ========== -->
+  <!-- ========== TAB QUÝ NHÂN ========== -->
   <div class="tab-panel" id="panel-qn">
-    <!-- ... giữ nguyên phần Quý Nhân như code trước ... -->
     <div class="card">
       <div class="ctitle">⭐ Thông tin của bạn</div>
       <div class="irow">
@@ -387,13 +386,12 @@ const ORDER_QN = ['hour','day','month','year'];
 const TRULBL = { year:'Năm', month:'Tháng', day:'Ngày', hour:'Giờ' };
 const STARS = ['☆☆☆☆','★☆☆☆','★★☆☆','★★★☆','★★★★'];
 
-// Quan hệ Địa Chi cơ bản
+// Quan hệ Địa Chi
 const LUC_XUNG = [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]];
 const LUC_HAI = [[0,5],[1,6],[2,7],[3,8],[4,9],[10,11]];
 const TAM_HOP = [[2,6,10],[1,5,9],[0,4,8],[3,7,11]];
 const LUC_HOP = [[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
 
-// GitHub URL
 const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Blackhelios9x/Bat-Tu-Quy-Nhan/main/dung-than.txt';
 const DEFAULT_SUGGESTIONS = {
   0: `- Màu sắc: xanh lá cây\n- Trang sức: vòng tay gỗ, đá xanh lục\n- Hướng: Đông, Đông Nam\n- Mẹo: Mặc đồ màu xanh lá, dùng cây cảnh.`,
@@ -404,7 +402,7 @@ const DEFAULT_SUGGESTIONS = {
 };
 
 let uploadedSuggestions = null;
-window.currentDungThanData = null; // Lưu dữ liệu dụng thần để dùng cho luận đại vận
+window.currentDungThanData = null;
 
 /* ========== HELPER ========== */
 function nhCss(nh){ return nh>=0 ? NH_CSS[nh] : ''; }
@@ -452,34 +450,58 @@ function switchTab(id){
   document.getElementById('panel-'+id).classList.add('active');
 }
 
-/* ========== MASK INPUT NGÀY ========== */
+/* ========== MASK INPUT NGÀY (ĐÃ SỬA LỖI NHẢY) ========== */
 function setupDateInputs() {
   const dateInputs = document.querySelectorAll('input[data-mask="date"]');
+  
   dateInputs.forEach(input => {
-    if (!input.value || input.value === '') input.value = '__/__/____';
+    // Khởi tạo
+    if (!input.value) input.value = '__/__/____';
     else input.value = formatDateString(input.value);
+    
+    // Xử lý sự kiện input
     input.addEventListener('input', function(e) {
       const raw = this.value.replace(/[^0-9]/g, '').substring(0,8);
       let formatted = '';
       if (raw.length > 0) formatted += raw.substring(0,2);
       if (raw.length >= 3) formatted += '/' + raw.substring(2,4);
       if (raw.length >= 5) formatted += '/' + raw.substring(4,8);
+      
+      // Giữ lại các ký tự gạch dưới nếu chưa đủ dài
+      const oldLen = this.value.length;
       this.value = formatted || '__/__/____';
-      setCaretPosition(this);
+      
+      // Đặt lại con trỏ
+      const newLen = this.value.length;
+      let caretPos = this.selectionStart;
+      
+      // Nếu đang ở vị trí dấu '/' thì nhảy qua
+      if (this.value[caretPos] === '/') caretPos++;
+      this.setSelectionRange(caretPos, caretPos);
     });
+
+    // Xử lý keydown để ngăn xóa dấu '/'
     input.addEventListener('keydown', function(e) {
-      const key = e.key, cursorPos = this.selectionStart, value = this.value;
+      const key = e.key;
+      const cursorPos = this.selectionStart;
+      const value = this.value;
+      
       if (key === 'Backspace') {
+        // Nếu con trỏ ngay sau dấu '/' hoặc ở vị trí 3,6 thì bỏ qua không xóa '/'
         if (cursorPos > 0 && (value[cursorPos-1] === '/' || cursorPos === 3 || cursorPos === 6)) {
-          e.preventDefault(); this.setSelectionRange(cursorPos-1, cursorPos-1);
+          e.preventDefault();
+          this.setSelectionRange(cursorPos-1, cursorPos-1);
         }
       }
       if (key === 'Delete') {
         if (cursorPos < value.length && (value[cursorPos] === '/' || cursorPos === 2 || cursorPos === 5)) {
-          e.preventDefault(); this.setSelectionRange(cursorPos+1, cursorPos+1);
+          e.preventDefault();
+          this.setSelectionRange(cursorPos+1, cursorPos+1);
         }
       }
     });
+
+    // Xử lý paste: chỉ lấy số, tự định dạng
     input.addEventListener('paste', function(e) {
       e.preventDefault();
       const pasted = (e.clipboardData || window.clipboardData).getData('text');
@@ -491,9 +513,11 @@ function setupDateInputs() {
       this.value = formatted || '__/__/____';
       setCaretPosition(this);
     });
+
     input.addEventListener('drop', (e) => e.preventDefault());
   });
 }
+
 function formatDateString(str) {
   const nums = str.replace(/[^0-9]/g, '').substring(0,8);
   if (nums.length === 0) return '__/__/____';
@@ -502,11 +526,18 @@ function formatDateString(str) {
   if (nums.length >= 5) result += '/' + nums.substring(4,8);
   return result;
 }
+
 function setCaretPosition(input) {
-  const val = input.value; let pos = 0;
-  for (let i=0; i<val.length; i++) if (val[i]==='/'||val[i]==='_') { pos=i; break; }
-  if (pos===0) pos=val.length;
-  input.setSelectionRange(pos,pos);
+  const val = input.value;
+  let pos = 0;
+  for (let i=0; i<val.length; i++) {
+    if (val[i] === '/' || val[i] === '_') {
+      pos = i;
+      break;
+    }
+  }
+  if (pos === 0) pos = val.length;
+  input.setSelectionRange(pos, pos);
 }
 
 function parseDateDMY(str) {
@@ -555,7 +586,6 @@ function calcDungThan(){
   if(isWeak){ dt1 = nhA; dt2 = nhSinhA; }
   else { dt1 = nhAsinh; dt2 = nhKhacA; }
 
-  // Lưu dữ liệu để luận đại vận
   window.currentDungThanData = { bz, dt1, dt2, isWeak, nhCan: nhA };
 
   renderDaiVan(bz, y, m, d, isMale);
@@ -640,14 +670,12 @@ function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
       dvList.push({ si, bi, can: CAN[si], chi: CHI[bi], nhCan: NH_CAN[si], nhChi: NH_CHI[bi], year: dvYear, age: dvAge });
     }
 
-    // Meta
     document.getElementById('dt-daivan-meta').innerHTML = `
       <strong>Vận ${isThuanVan?'Thuận':'Nghịch'}</strong> · Can năm: ${bz.year.can} (${isYangYear?'Dương':'Âm'}) ·
       Tiết: ${targetJie.getName()} · ${diffDays} ngày → khởi ${khoiVanYears} tuổi ${khoiVanMonths?' '+khoiVanMonths+' tháng':''} ·
       Năm ${firstDVYear} (${firstDVAge} tuổi)
     `;
 
-    // Render các ô
     let rowHtml = '';
     dvList.forEach((dv,idx) => {
       rowHtml += `<div class="dv-item" data-dv-index="${idx}" onclick="showDaiVanDetail(${idx})">
@@ -658,9 +686,7 @@ function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
     });
     document.getElementById('dt-daivan-row').innerHTML = rowHtml;
     dvSection.style.display = 'block';
-    // Ẩn khung chi tiết cũ
     document.getElementById('dv-detail-container').style.display = 'none';
-    // Lưu dvList vào window để dùng khi click
     window.currentDaiVanList = dvList;
   } catch(err) {
     console.error(err);
@@ -677,12 +703,10 @@ function showDaiVanDetail(index) {
   const dv = dvList[index];
   const { bz, dt1, dt2, isWeak } = data;
   
-  // Xác định dụng thần và kỵ thần
   const dungThanList = [dt1, dt2];
   const kyThanList = [];
   for (let i=0; i<5; i++) if (!dungThanList.includes(i)) kyThanList.push(i);
   
-  // Phân tích can, chi của đại vận
   const canHanh = dv.nhCan;
   const chiHanh = dv.nhChi;
   
@@ -691,10 +715,8 @@ function showDaiVanDetail(index) {
   const canLaKy = kyThanList.includes(canHanh);
   const chiLaKy = kyThanList.includes(chiHanh);
   
-  // Mô tả
   let desc = `<strong>Đại vận ${dv.can} ${dv.chi} (${dv.age} tuổi, ${dv.year})</strong><br><br>`;
   
-  // Đánh giá chung
   if (canLaDung && chiLaDung) desc += `✅ Đại vận mang cả Thiên Can và Địa Chi đều là <strong>Dụng Thần</strong>. Đây là giai đoạn cực kỳ thuận lợi, công danh thăng tiến, tài lộc dồi dào, quý nhân phù trợ mạnh mẽ.`;
   else if (canLaDung || chiLaDung) desc += `🌟 Đại vận có yếu tố <strong>Dụng Thần</strong> (${canLaDung?'Thiên Can '+dv.can:''}${canLaDung&&chiLaDung?' và ':''}${chiLaDung?'Địa Chi '+dv.chi:''}). Nhìn chung thuận lợi, tuy có thể gặp thử thách nhưng đều vượt qua được.`;
   else if (canLaKy && chiLaKy) desc += `⚠️ Đại vận mang cả Thiên Can và Địa Chi đều là <strong>Kỵ Thần</strong>. Đây là thời kỳ khó khăn, dễ hao tài, công việc trì trệ, sức khỏe giảm sút, cần thận trọng.`;
@@ -710,7 +732,6 @@ function showDaiVanDetail(index) {
   else if (chiLaKy) desc += `Dễ gặp biến động gia đình, sức khỏe kém, đề phòng tai nạn, hao tài ngầm.`;
   else desc += `Bình ổn.`;
   
-  // Tương tác với bát tự gốc (xung khắc hại hợp)
   const interactions = [];
   const chiIndex = dv.bi;
   ['year','month','day','hour'].forEach(tru => {
@@ -730,13 +751,12 @@ function showDaiVanDetail(index) {
     desc += `<br><br>🔗 Không có xung khắc hại hợp đặc biệt với các trụ.`;
   }
   
-  // Hiển thị
   document.getElementById('dv-detail-title').innerHTML = `✨ Luận giải Đại Vận ${dv.can} ${dv.chi}`;
   document.getElementById('dv-detail-content').innerHTML = desc;
   document.getElementById('dv-detail-container').style.display = 'block';
 }
 
-/* ========== QUÝ NHÂN (giữ nguyên) ========== */
+/* ========== QUÝ NHÂN ========== */
 function parseTime(s){
   if(!s||!s.trim()) return {h:0,min:0};
   const m = s.trim().match(/^(\d{1,2}):(\d{2})$/);
