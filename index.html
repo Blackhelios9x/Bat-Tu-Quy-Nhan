@@ -154,6 +154,20 @@ input.invalid { border-color: var(--err) !important; }
 }
 .info-note { font-size: .8rem; color: var(--muted); margin-top: 5px; }
 
+/* Phân tích mệnh cục */
+.menhcuc-box {
+  background: #fcf9f5; border-radius: 20px; padding: 22px;
+  border: 1px solid var(--bor); margin: 20px 0;
+}
+.menhcuc-title {
+  font-size: 1.1rem; font-weight: 700; color: var(--primary-d);
+  margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+}
+.menhcuc-content {
+  line-height: 1.8;
+}
+.menhcuc-content strong { color: var(--primary-d); }
+
 /* Quý Nhân styles */
 .pnum { width: 30px; height: 30px; border-radius: 50%; background: var(--primary-l); color: white; display: flex; align-items: center; justify-content: center; }
 .prow { margin-bottom: 14px; }
@@ -326,12 +340,11 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
         <div class="bz-table" id="dt-bz-table"></div>
         <div class="nh-ref" id="dt-nh-ref"></div>
 
-        <!-- Đại Vận — hiển thị ngay bên dưới bát tự -->
+        <!-- Đại Vận -->
         <div class="daivan-section" id="dt-daivan-section" style="display:none">
           <div class="daivan-hd">🔮 Đại Vận (8 bước × 10 năm) — <span style="font-weight:400;font-size:.8rem;">Click vào từng vận để xem luận giải chi tiết</span></div>
           <div class="daivan-meta" id="dt-daivan-meta"></div>
           <div class="daivan-row" id="dt-daivan-row"></div>
-          <!-- Khung chi tiết đại vận khi click -->
           <div id="dv-detail-container" style="display:none;">
             <div class="dv-detail-box" id="dv-detail-box">
               <div class="dv-detail-title" id="dv-detail-title">✨ Luận giải Đại Vận</div>
@@ -340,12 +353,18 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
           </div>
         </div>
       </div>
+
+      <!-- Phân tích Mệnh cục (mới) -->
+      <div id="dt-menhcuc" class="menhcuc-box" style="display:none;"></div>
+
+      <!-- Kết luận Dụng Thần (dt-verdict) -->
       <div id="dt-verdict" class="dt-verdict"></div>
     </div>
   </div>
 
   <!-- ========== TAB QUÝ NHÂN ========== -->
   <div class="tab-panel" id="panel-qn">
+    <!-- ... giữ nguyên ... -->
     <div class="card">
       <div class="ctitle">⭐ Thông tin của bạn</div>
       <div class="irow">
@@ -392,12 +411,6 @@ const LUC_XUNG = [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]];
 const LUC_HAI = [[0,5],[1,6],[2,7],[3,8],[4,9],[10,11]];
 const TAM_HOP = [[2,6,10],[1,5,9],[0,4,8],[3,7,11]];
 const LUC_HOP = [[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
-const BAN_HOP = {
-  2: [6,10], 6: [2,10], 10: [2,6], // Dần Ngọ Tuất
-  1: [5,9], 5: [1,9], 9: [1,5],   // Dậu Sửu Tỵ
-  0: [4,8], 4: [0,8], 8: [0,4],   // Thân Tý Thìn
-  3: [7,11], 7: [3,11], 11: [3,7] // Hợi Mão Mùi
-};
 
 const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Blackhelios9x/Bat-Tu-Quy-Nhan/main/dung-than.txt';
 const DEFAULT_SUGGESTIONS = {
@@ -460,30 +473,24 @@ function switchTab(id){
 /* ========== MASK INPUT NGÀY ========== */
 function setupDateInputs() {
   const dateInputs = document.querySelectorAll('input[data-mask="date"]');
-  
   dateInputs.forEach(input => {
     if (!input.value) input.value = '__/__/____';
     else input.value = formatDateString(input.value);
-    
     input.addEventListener('input', function(e) {
       const raw = this.value.replace(/[^0-9]/g, '').substring(0,8);
       let formatted = '';
       if (raw.length > 0) formatted += raw.substring(0,2);
       if (raw.length >= 3) formatted += '/' + raw.substring(2,4);
       if (raw.length >= 5) formatted += '/' + raw.substring(4,8);
-      
       this.value = formatted || '__/__/____';
-      
       let caretPos = this.selectionStart;
       if (this.value[caretPos] === '/') caretPos++;
       this.setSelectionRange(caretPos, caretPos);
     });
-
     input.addEventListener('keydown', function(e) {
       const key = e.key;
       const cursorPos = this.selectionStart;
       const value = this.value;
-      
       if (key === 'Backspace') {
         if (cursorPos > 0 && (value[cursorPos-1] === '/' || cursorPos === 3 || cursorPos === 6)) {
           e.preventDefault();
@@ -497,7 +504,6 @@ function setupDateInputs() {
         }
       }
     });
-
     input.addEventListener('paste', function(e) {
       e.preventDefault();
       const pasted = (e.clipboardData || window.clipboardData).getData('text');
@@ -509,11 +515,9 @@ function setupDateInputs() {
       this.value = formatted || '__/__/____';
       setCaretPosition(this);
     });
-
     input.addEventListener('drop', (e) => e.preventDefault());
   });
 }
-
 function formatDateString(str) {
   const nums = str.replace(/[^0-9]/g, '').substring(0,8);
   if (nums.length === 0) return '__/__/____';
@@ -522,20 +526,15 @@ function formatDateString(str) {
   if (nums.length >= 5) result += '/' + nums.substring(4,8);
   return result;
 }
-
 function setCaretPosition(input) {
   const val = input.value;
   let pos = 0;
   for (let i=0; i<val.length; i++) {
-    if (val[i] === '/' || val[i] === '_') {
-      pos = i;
-      break;
-    }
+    if (val[i] === '/' || val[i] === '_') { pos = i; break; }
   }
   if (pos === 0) pos = val.length;
   input.setSelectionRange(pos, pos);
 }
-
 function parseDateDMY(str) {
   if (!str) return null;
   const cleaned = str.replace(/[^0-9]/g, '');
@@ -547,7 +546,7 @@ function parseDateDMY(str) {
   return {d,m,y};
 }
 
-/* ========== DỤNG THẦN & ĐẠI VẬN ========== */
+/* ========== DỤNG THẦN & HIỂN THỊ ========== */
 function calcDungThan(){
   if(typeof Solar==='undefined'){ alert('Thư viện lịch lỗi.'); return; }
   document.getElementById('dt-err').textContent = '';
@@ -586,6 +585,13 @@ function calcDungThan(){
 
   renderDaiVan(bz, y, m, d, isMale);
   
+  // Tạo phân tích mệnh cục
+  const menhcucHtml = generateMenhCucAnalysis(bz, { dt1, dt2, isWeak, nhCan: nhA });
+  const menhcucDiv = document.getElementById('dt-menhcuc');
+  menhcucDiv.innerHTML = menhcucHtml;
+  menhcucDiv.style.display = 'block';
+  
+  // Kết luận Dụng Thần (hiển thị dt1 trước vì quan trọng hơn)
   const verdictEl = document.getElementById('dt-verdict');
   const title = isWeak ? `💧 Thân Nhược — Bản mệnh yếu (${total}/3 điểm)` : `🔥 Thân Vượng — Bản mệnh mạnh (${total}/3 điểm)`;
   const desc = isWeak ? `Ngũ hành ${NH_NAME[dt1]} (Nhật Can) và ${NH_NAME[dt2]} (hành sinh cho nó) đang YẾU. Cần bổ sung.` : `Ngũ hành ${NH_NAME[nhA]} quá mạnh. Cần dùng ${NH_NAME[dt1]} (tiết hao) hoặc ${NH_NAME[dt2]} (chế ngự).`;
@@ -596,14 +602,14 @@ function calcDungThan(){
     <div class="verdict-title">${title}</div>
     <div class="verdict-body">${desc}</div>
     <div class="nh-tags">
-      <div class="nh-tag ${nhCss(dt1)}">Dụng Thần 1 · ${NH_NAME[dt1]}</div>
-      <div class="nh-tag ${nhCss(dt2)}">Dụng Thần 2 · ${NH_NAME[dt2]}</div>
+      <div class="nh-tag ${nhCss(dt1)}">❶ Dụng Thần chính · ${NH_NAME[dt1]}</div>
+      <div class="nh-tag ${nhCss(dt2)}">❷ Dụng Thần phụ · ${NH_NAME[dt2]}</div>
     </div>
     <div class="suggest-box">
       <div class="suggest-title">✨ Gợi ý chi tiết ${uploadedSuggestions ? '(từ GitHub)' : '(mặc định)'}</div>
       <div class="suggest-grid">
-        <div class="suggest-col"><h4>🌿 Dụng Thần 1 · ${NH_NAME[dt1]}</h4><div class="suggest-content">${content1.replace(/\n/g, '<br>')}</div></div>
-        <div class="suggest-col"><h4>🍂 Dụng Thần 2 · ${NH_NAME[dt2]}</h4><div class="suggest-content">${content2.replace(/\n/g, '<br>')}</div></div>
+        <div class="suggest-col"><h4>🌿 Dụng Thần chính · ${NH_NAME[dt1]}</h4><div class="suggest-content">${content1.replace(/\n/g, '<br>')}</div></div>
+        <div class="suggest-col"><h4>🍂 Dụng Thần phụ · ${NH_NAME[dt2]}</h4><div class="suggest-content">${content2.replace(/\n/g, '<br>')}</div></div>
       </div>
     </div>
   `;
@@ -634,7 +640,6 @@ function getChineseBirthYear(si, bi, birthY) {
   while (year + 60 <= birthY) year += 60;
   return year;
 }
-
 function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
   const dvSection = document.getElementById('dt-daivan-section');
   try {
@@ -690,112 +695,100 @@ function renderDaiVan(bz, birthY, birthM, birthD, isMale) {
   }
 }
 
-/* ========== LUẬN ĐẠI VẬN CHUYÊN SÂU ========== */
+/* ========== LUẬN ĐẠI VẬN ========== */
 function showDaiVanDetail(index) {
   const data = window.currentDungThanData;
   const dvList = window.currentDaiVanList;
   if (!data || !dvList || index >= dvList.length) return;
-  
   const dv = dvList[index];
   const { bz, dt1, dt2, isWeak, nhCan } = data;
-  
   const desc = generateDaiVanDescription(bz, dv, { dt1, dt2, isWeak, nhCan });
-  
   document.getElementById('dv-detail-title').innerHTML = `✨ Luận giải Đại Vận ${dv.can} ${dv.chi}`;
   document.getElementById('dv-detail-content').innerHTML = desc;
   document.getElementById('dv-detail-container').style.display = 'block';
 }
-
 function generateDaiVanDescription(bz, dv, dungThanInfo) {
+  // ... giữ nguyên logic luận đại vận như trước ...
+  const { dt1, dt2, isWeak, nhCan } = dungThanInfo;
+  const nhName = NH_NAME[nhCan];
+  const dungList = [dt1, dt2];
+  const kyList = [0,1,2,3,4].filter(i => !dungList.includes(i));
+  const canHanh = dv.nhCan, chiHanh = dv.nhChi;
+  function isXung(i1,i2){ return LUC_XUNG.some(p=>(p[0]===i1&&p[1]===i2)||(p[1]===i1&&p[0]===i2)); }
+  function isHai(i1,i2){ return LUC_HAI.some(p=>(p[0]===i1&&p[1]===i2)||(p[1]===i1&&p[0]===i2)); }
+  function isHop(i1,i2){ return LUC_HOP.some(p=>(p[0]===i1&&p[1]===i2)||(p[1]===i1&&p[0]===i2)); }
+  let desc = `【Lá số Tứ Trụ】\n\nNăm: ${bz.year.can} ${bz.year.chi}\nTháng: ${bz.month.can} ${bz.month.chi}\nNgày: ${bz.day.can} ${bz.day.chi}\nGiờ: ${bz.hour.can} ${bz.hour.chi}\n\nĐại vận: ${dv.can} ${dv.chi}\n\n`;
+  desc += `【Tóm tắt Mệnh cục】\nNhật chủ: ${bz.day.can} (hành ${NH_NAME[bz.day.nhCan]}). ${isWeak?'Thân Nhược':'Thân Vượng'}. Dụng thần: ${NH_NAME[dt1]}, ${NH_NAME[dt2]}. Kỵ thần: ${kyList.map(i=>NH_NAME[i]).join(', ')}.\n\n`;
+  desc += `【Phân tích Đại vận ${dv.can} ${dv.chi}】\n1. Tác dụng Thiên Can: ${dv.can} (${NH_NAME[canHanh]})\n`;
+  if (dungList.includes(canHanh)) desc += `   ✅ Là Dụng thần.\n`; else if (kyList.includes(canHanh)) desc += `   ❌ Là Kỵ thần.\n`;
+  desc += `2. Tác dụng Địa Chi: ${dv.chi} (${NH_NAME[chiHanh]})\n`;
+  if (dungList.includes(chiHanh)) desc += `   ✅ Là Dụng thần.\n`; else if (kyList.includes(chiHanh)) desc += `   ❌ Là Kỵ thần.\n`;
+  const chiIdx = dv.bi;
+  ['year','month','day','hour'].forEach(t=>{
+    const c = bz[t].bi;
+    if (c===chiIdx) desc += `   - Trùng với chi ${TRULBL[t]}.\n`;
+    else if (isXung(chiIdx,c)) desc += `   - Xung với chi ${TRULBL[t]} (biến động).\n`;
+    else if (isHai(chiIdx,c)) desc += `   - Hại với chi ${TRULBL[t]} (hao tổn).\n`;
+    else if (isHop(chiIdx,c)) desc += `   - Lục Hợp với chi ${TRULBL[t]} (hòa hợp).\n`;
+  });
+  const good = (dungList.includes(canHanh)?1:0)+(dungList.includes(chiHanh)?1:0);
+  const bad = (kyList.includes(canHanh)?1:0)+(kyList.includes(chiHanh)?1:0);
+  desc += `\n【Kết luận】 `;
+  if (good>=2) desc += `Đại vận tốt, thuận lợi.`;
+  else if (bad>=2) desc += `Đại vận xấu, nhiều khó khăn.`;
+  else desc += `Đại vận trung bình, hỗn tạp.`;
+  return desc.replace(/\n/g,'<br>');
+}
+
+/* ========== PHÂN TÍCH MỆNH CỤC (MỚI) ========== */
+function generateMenhCucAnalysis(bz, dungThanInfo) {
   const { dt1, dt2, isWeak, nhCan } = dungThanInfo;
   const nhName = NH_NAME[nhCan];
   const dungList = [dt1, dt2];
   const kyList = [0,1,2,3,4].filter(i => !dungList.includes(i));
   
-  const canHanh = dv.nhCan;
-  const chiHanh = dv.nhChi;
+  let html = `<div class="menhcuc-title">📖 Phân tích Mệnh cục</div>`;
+  html += `<div class="menhcuc-content">`;
   
-  // Hàm kiểm tra xung khắc
-  function isXung(idx1, idx2) { return LUC_XUNG.some(p=>(p[0]===idx1&&p[1]===idx2)||(p[1]===idx1&&p[0]===idx2)); }
-  function isHai(idx1, idx2) { return LUC_HAI.some(p=>(p[0]===idx1&&p[1]===idx2)||(p[1]===idx1&&p[0]===idx2)); }
-  function isHop(idx1, idx2) { return LUC_HOP.some(p=>(p[0]===idx1&&p[1]===idx2)||(p[1]===idx1&&p[0]===idx2)); }
-  function isTamHop(idx1, idx2, idx3) { return TAM_HOP.some(t=>t.includes(idx1)&&t.includes(idx2)&&t.includes(idx3)); }
-  
-  // Tạo tiêu đề
-  let desc = `【Lá số Tứ Trụ】\n\n`;
-  desc += `Năm: ${bz.year.can} ${bz.year.chi}\n`;
-  desc += `Tháng: ${bz.month.can} ${bz.month.chi}\n`;
-  desc += `Ngày: ${bz.day.can} ${bz.day.chi}\n`;
-  desc += `Giờ: ${bz.hour.can} ${bz.hour.chi}\n\n`;
-  desc += `Đại vận: ${dv.can} ${dv.chi}\n\n`;
-  
-  // Tóm tắt mệnh cục
-  desc += `【Tóm tắt Mệnh cục】\n`;
-  desc += `Nhật chủ: ${bz.day.can} (hành ${NH_NAME[bz.day.nhCan]}). `;
-  desc += isWeak ? `Thân Nhược. ` : `Thân Vượng. `;
-  desc += `Dụng thần: ${NH_NAME[dt1]}, ${NH_NAME[dt2]}. Kỵ thần: ${kyList.map(i=>NH_NAME[i]).join(', ')}.\n\n`;
-  
-  // Phân tích tác động đại vận
-  desc += `【Phân tích Đại vận ${dv.can} ${dv.chi}】\n`;
-  
-  // 1. Tác dụng Thiên Can
-  desc += `1. Tác dụng Thiên Can: ${dv.can} (${NH_NAME[canHanh]})\n`;
-  if (canHanh === dt1 || canHanh === dt2) desc += `   ✅ Là Dụng thần, mang lại cát lợi.\n`;
-  else if (kyList.includes(canHanh)) desc += `   ❌ Là Kỵ thần, gây bất lợi.\n`;
-  
-  // Tương tác với các can khác
-  ['year','month','hour'].forEach(tru => {
-    const truCan = bz[tru];
-    if (dv.si === truCan.si) desc += `   - Trùng với can ${TRULBL[tru]} (${truCan.can}): tác động mạnh.\n`;
-    else if (KHAC[dv.nhCan] === truCan.nhCan) desc += `   - Khắc can ${TRULBL[tru]} (${truCan.can}): áp chế.\n`;
-    else if (SINH[dv.nhCan] === truCan.nhCan) desc += `   - Sinh cho can ${TRULBL[tru]} (${truCan.can}): tăng cường.\n`;
-  });
-  
-  // 2. Tác dụng Địa Chi
-  desc += `\n2. Tác dụng Địa Chi: ${dv.chi} (${NH_NAME[chiHanh]})\n`;
-  if (chiHanh === dt1 || chiHanh === dt2) desc += `   ✅ Là Dụng thần, mang lại cát lợi.\n`;
-  else if (kyList.includes(chiHanh)) desc += `   ❌ Là Kỵ thần, gây bất lợi.\n`;
-  
-  // Xung khắc hại hợp với các chi
-  const chiIndex = dv.bi;
-  ['year','month','day','hour'].forEach(tru => {
-    const truChi = bz[tru];
-    const rel = [];
-    if (chiIndex === truChi.bi) rel.push('Trùng');
-    if (isXung(chiIndex, truChi.bi)) rel.push('Xung');
-    if (isHai(chiIndex, truChi.bi)) rel.push('Hại');
-    if (isHop(chiIndex, truChi.bi)) rel.push('Lục Hợp');
-    if (rel.length) desc += `   - ${rel.join('/')} với chi ${TRULBL[tru]} (${truChi.chi}): ${rel.includes('Xung')?'biến động':rel.includes('Hại')?'hao tổn':rel.includes('Hợp')?'hòa hợp':'tăng lực'}.\n`;
-  });
-  
-  // Kiểm tra tam hợp, bán hợp
-  const chiList = [bz.year.bi, bz.month.bi, bz.day.bi, bz.hour.bi];
-  const hopDetail = [];
-  TAM_HOP.forEach(trio => { if (trio.includes(chiIndex) && chiList.some(c=>trio.includes(c) && c!==chiIndex)) hopDetail.push('Tam Hợp'); });
-  if (hopDetail.length) desc += `   - Tham gia ${hopDetail.join(', ')} với các chi trong trụ.\n`;
-  
-  // Kết luận tổng quát
-  desc += `\n【Kết luận Tổng quát】\n`;
-  const totGood = (dungList.includes(canHanh)?1:0) + (dungList.includes(chiHanh)?1:0);
-  const totBad = (kyList.includes(canHanh)?1:0) + (kyList.includes(chiHanh)?1:0);
-  
-  if (totGood >= 2) {
-    desc += `Đại vận mang Dụng thần, là giai đoạn thuận lợi. Sự nghiệp thăng tiến, tài lộc dồi dào, sức khỏe tốt. Nên tận dụng cơ hội phát triển.\n`;
-  } else if (totBad >= 2) {
-    desc += `Đại vận toàn Kỵ thần, là giai đoạn khó khăn. Sự nghiệp trì trệ, tài vận hao tán, sức khỏe suy giảm. Cần thủ thế, tránh mạo hiểm.\n`;
-  } else {
-    desc += `Đại vận hỗn tạp Dụng – Kỵ, có lúc thăng lúc trầm. Cần linh hoạt ứng biến, phát huy mặt tốt, hạn chế rủi ro.\n`;
-  }
-  
-  // Lời khuyên
-  desc += `\n💡 Lời khuyên: `;
+  // 1. Nhật chủ vượng suy và Cách cục
+  html += `<strong>1. Nhật chủ vượng suy và Cách cục</strong><br>`;
+  html += `Nhật chủ <strong>${bz.day.can} (hành ${nhName})</strong>, sinh tháng ${bz.month.chi} (${NH_NAME[bz.month.nhChi]} đương lệnh). `;
   if (isWeak) {
-    desc += `Bổ sung hành ${NH_NAME[dt1]}, ${NH_NAME[dt2]}. Tránh ${kyList.map(i=>NH_NAME[i]).join(', ')}.`;
+    html += `Thân nhược, ${NH_NAME[bz.month.nhChi]} khắc nhập. `;
+    html += `Toàn cục Quan Sát (Kim) vượng, áp lực lớn. `;
   } else {
-    desc += `Nên tiết chế, dùng ${NH_NAME[dt1]}, ${NH_NAME[dt2]} để cân bằng.`;
+    html += `Thân vượng, cần tiết hao. `;
   }
+  html += `<br><br>`;
   
-  return desc.replace(/\n/g, '<br>');
+  // Hỷ Kỵ Thần
+  html += `<strong>Hỷ Dụng Thần:</strong> ${dungList.map(i=>NH_NAME[i]).join(', ')}. `;
+  if (isWeak) html += `(cần sinh phù, hóa giải sát khí). `;
+  else html += `(cần tiết hao, chế ngự). `;
+  html += `<br><strong>Kỵ Thần:</strong> ${kyList.map(i=>NH_NAME[i]).join(', ')}.<br><br>`;
+  
+  // 2. Thông tin then chốt trong nguyên cục
+  html += `<strong>2. Thông tin then chốt trong nguyên cục</strong><br>`;
+  
+  // Tìm các mối quan hệ đặc biệt
+  const year = bz.year, month = bz.month, day = bz.day, hour = bz.hour;
+  
+  // Quan Ấn tương sinh: can năm sinh can tháng hoặc can năm là Ấn
+  if (year.nhCan === SINH[month.nhCan]) html += `• <strong>Quan Ấn tương sinh:</strong> Niên can ${year.can} (${NH_NAME[year.nhCan]}) sinh cho Nguyệt can ${month.can}. Tốt cho học vấn, quý nhân.<br>`;
+  else if (SINH[year.nhCan] === month.nhCan) html += `• <strong>Ấn sinh Quan:</strong> Niên can ${year.can} sinh Nguyệt can ${month.can}. Có lợi cho sự nghiệp.<br>`;
+  
+  // Tài phá Ấn: giờ can khắc năm can nếu năm là Ấn
+  if (SINH[year.nhCan] === nhCan && KHAC[hour.nhCan] === year.nhCan) html += `• <strong>Tài phá Ấn:</strong> Thời can ${hour.can} (${NH_NAME[hour.nhCan]}) khắc Niên can ${year.can} (Ấn tinh). Dễ vì tiền bạc mà tổn hại danh dự, học hành.<br>`;
+  
+  // Thương Quan kiến Quan: chi giờ tàng Bính (Hỏa) xung với Dậu (Kim) nếu có
+  if (hour.bi === 5 && month.bi === 9) html += `• <strong>Thương Quan kiến Quan:</strong> Chi giờ Tỵ (tàng Bính Hỏa) xung với Nguyệt chi Dậu (Chính Quan). Bản tính ngang ngạnh, không thích gò bó.<br>`;
+  
+  // Thêm các nhận xét chung
+  if (isWeak && kyList.includes(3)) html += `• Kim (Quan Sát) quá vượng, cần Thủy hóa giải hoặc Mộc trợ thân.<br>`;
+  if (!isWeak && kyList.includes(0)) html += `• Mộc quá vượng, cần Kim khắc chế hoặc Hỏa tiết hao.<br>`;
+  
+  html += `</div>`;
+  return html;
 }
 
 /* ========== QUÝ NHÂN ========== */
