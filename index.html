@@ -1,37 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-<title>Bát Tự · Tử Vi · Quý Nhân</title>
-<script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
-/* ========== CSS LUẬN GIẢI ========== */
-.luangiai-item {
-  background: #fef9f2;
-  border: 1px solid var(--bor);
-  border-radius: 16px;
-  padding: 18px;
-  margin-bottom: 18px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-  text-align: left;
-}
-.lg-header {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 8px;
-}
-.lg-type {
-  background: var(--primary);
-  color: white;
-  padding: 2px 14px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-.lg-score {
-  font-weight: 700;
-  color: var(--primary-d);
-  font-size: 0.85rem;
-}
 .lg-dieu-kien {
   font-size: 0.75rem;
   color: var(--muted2);
@@ -489,6 +458,70 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
   .trung-tam { font-size: 0.6rem; padding: 4px; }
   .tuan-triet-marker { font-size: 0.4rem; padding: 1px 3px; }
 }
+/* ========== CSS LUẬN GIẢI ========== */
+.luangiai-item {
+  background: #fef9f2;
+  border: 1px solid var(--bor);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  text-align: left;
+}
+.lg-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.lg-type {
+  background: var(--primary);
+  color: white;
+  padding: 2px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.lg-score {
+  font-weight: 700;
+  color: var(--primary-d);
+  font-size: 0.85rem;
+}
+.lg-dieu-kien {
+  font-size: 0.75rem;
+  color: var(--muted2);
+  margin-bottom: 6px;
+  font-style: italic;
+}
+.lg-loi-giai {
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.lg-tho {
+  background: #f5ede3;
+  border-left: 4px solid var(--primary);
+  padding: 10px 14px;
+  margin-top: 12px;
+  font-style: italic;
+  border-radius: 0 12px 12px 0;
+  white-space: pre-wrap;
+  font-family: 'Times New Roman', serif;
+}
+.btn-luangiai {
+  background: #7a4e2e;
+  color: #fcf3e8;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 14px 28px;
+  border-radius: 50px;
+  cursor: pointer;
+  margin-top: 25px;
+  border-bottom: 5px solid #4a2e1e;
+  transition: 0.1s;
+  box-shadow: 0 6px 0 #4a2e1e;
+  display: inline-block;
+}
+.btn-luangiai:hover { background: #8f613f; transform: translateY(-2px); }
+.btn-luangiai:active { transform: translateY(4px); box-shadow: 0 2px 0 #4a2e1e; }
 </style>
 </head>
 <body>
@@ -1988,7 +2021,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   // Gọi ngay khi trang load
   window.addEventListener('DOMContentLoaded', fetchRules);
 })();
-</script>
 </script>
 </body>
 </html>
