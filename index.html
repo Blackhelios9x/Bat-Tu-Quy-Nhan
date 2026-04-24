@@ -1778,17 +1778,15 @@
      ======================================================== -->
 <script>
 (function() {
-    // URL file luận giải trên GitHub (cùng repo)
     const RULES_URL = 'https://raw.githubusercontent.com/Blackhelios9x/Bat-Tu-Quy-Nhan/main/luangiai.txt';
     let loadedRules = [];
 
-    // ---------- LỚP XỬ LÝ KHÔNG GIAN ----------
     const DIA_BAN = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
 
     class LaSo {
         constructor(cungData) { this.cung = cungData; }
         normalize(name) {
-            return name.trim().toLowerCase()
+            return name.replace(/\s*\(.*?\)\s*/g, '').trim().toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/đ/g, 'd').replace(/\s+/g, ' ');
         }
@@ -1809,14 +1807,10 @@
         }
         tamHop(idx) { const nhom = idx % 4; return [(nhom+4)%12, (nhom+8)%12]; }
         doiCung(idx) { return (idx + 6) % 12; }
-        nhiHop(idx) {
-            const map = {5:8,4:9,3:10,2:11,1:6,0:7,8:5,9:4,10:3,11:2,6:1,7:0};
-            return map[idx];
-        }
+        nhiHop(idx) { const map = {5:8,4:9,3:10,2:11,1:6,0:7,8:5,9:4,10:3,11:2,6:1,7:0}; return map[idx]; }
         giapCung(idx) { return [(idx+11)%12, (idx+1)%12]; }
     }
 
-    // ---------- TRÍCH XUẤT LÁ SỐ TỪ DOM ----------
     function extractLaSo() {
         const cung = {};
         for (let i = 1; i <= 12; i++) {
@@ -1834,7 +1828,11 @@
                         const tmp = document.createElement('div');
                         tmp.innerHTML = line;
                         const txt = tmp.textContent.trim();
-                        if (txt) stars.push(txt);
+                        if (txt) {
+                            // Loại bỏ hậu tố kiểu (M), (V)...
+                            const clean = txt.replace(/\s*\(.*?\)\s*/g, '').trim();
+                            if (clean) stars.push(clean);
+                        }
                     });
                 }
             });
@@ -1843,7 +1841,6 @@
         return new LaSo(cung);
     }
 
-    // ---------- ĐỌC FILE TXT ----------
     function parseRules(text) {
         const lines = text.split(/\r?\n/);
         const rules = [];
@@ -1892,10 +1889,17 @@
                 else if (/cách|cục/i.test(r.condition_raw)) type = 'CÁCH';
                 else type = 'SAO';
             }
-            const stars = [];
-            const starRegex = /[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)?/g;
+            // Trích xuất các cụm từ (tên sao) và loại bỏ địa bàn, từ khóa
+            const rawTokens = [];
+            const regex = /[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*/g;
             let m;
-            while ((m = starRegex.exec(r.condition_raw)) !== null) stars.push(m[0].trim().toUpperCase());
+            while ((m = regex.exec(r.condition_raw)) !== null) {
+                rawTokens.push(m[0].trim());
+            }
+            const DIA_BAN_LIST = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
+            const stars = rawTokens
+                .filter(t => !DIA_BAN_LIST.includes(t))
+                .map(t => t.toUpperCase());
             let relation = 'co_mat';
             if (r.condition_raw.includes('đồng cung')) relation = 'dong_cung';
             else if (r.condition_raw.includes('tam hợp')) relation = 'tam_hop';
@@ -1907,7 +1911,6 @@
         });
     }
 
-    // ---------- SO KHỚP QUY TẮC ----------
     function matchRule(rule, laso, gocIdx) {
         if (!rule.stars.length) return null;
         let minW = 1.0;
@@ -1927,7 +1930,6 @@
         };
     }
 
-    // ---------- HÀM CHÍNH: THỰC HIỆN LUẬN GIẢI ----------
     window.thucHienLuanGiai = function(gocCung = 'Mệnh') {
         const laso = extractLaSo();
         if (!laso) return alert('⚠️ Chưa có dữ liệu lá số.');
@@ -1942,7 +1944,7 @@
                 break;
             }
         }
-        if (gocIdx === -1) gocIdx = 0; // fallback
+        if (gocIdx === -1) gocIdx = 0;
 
         const results = [];
         for (const rule of loadedRules) {
@@ -1976,7 +1978,6 @@
         });
     };
 
-    // ---------- TỰ ĐỘNG TẢI FILE LUẬN GIẢI TỪ GITHUB ----------
     async function fetchRules() {
         try {
             const resp = await fetch(RULES_URL);
@@ -1990,7 +1991,6 @@
         }
     }
 
-    // Gọi ngay khi trang load
     window.addEventListener('DOMContentLoaded', fetchRules);
 })();
 </script>
