@@ -5,6 +5,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
 <title>Bát Tự · Tử Vi · Quý Nhân</title>
 <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+/* ========== CSS LUẬN GIẢI ========== */
+.luangiai-item {
+  background: #fef9f2;
+  border: 1px solid var(--bor);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  text-align: left;
+}
+.lg-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.lg-type {
+  background: var(--primary);
+  color: white;
+  padding: 2px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.lg-score {
+  font-weight: 700;
+  color: var(--primary-d);
+  font-size: 0.85rem;
+}
+.lg-dieu-kien {
+  font-size: 0.75rem;
+  color: var(--muted2);
+  margin-bottom: 6px;
+  font-style: italic;
+}
+.lg-loi-giai {
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+.lg-tho {
+  background: #f5ede3;
+  border-left: 4px solid var(--primary);
+  padding: 10px 14px;
+  margin-top: 12px;
+  font-style: italic;
+  border-radius: 0 12px 12px 0;
+  white-space: pre-wrap;
+  font-family: 'Times New Roman', serif;
+}
+.btn-luangiai {
+  background: #7a4e2e;
+  color: #fcf3e8;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 14px 28px;
+  border-radius: 50px;
+  cursor: pointer;
+  margin-top: 25px;
+  border-bottom: 5px solid #4a2e1e;
+  transition: 0.1s;
+  box-shadow: 0 6px 0 #4a2e1e;
+  display: inline-block;
+}
+.btn-luangiai:hover { background: #8f613f; transform: translateY(-2px); }
+.btn-luangiai:active { transform: translateY(4px); box-shadow: 0 2px 0 #4a2e1e; }
 <style>
 /* ========== BIẾN MÀU – BAT TU ========== */
 :root {
@@ -548,7 +612,12 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
         </div>
       </div>
     </div>
-
+<!-- Nút Luận giải -->
+<div style="text-align: center; margin-top: 30px;">
+  <button id="btnLuanGiai" class="btn-luangiai" onclick="thucHienLuanGiai()">📜 Luận giải lá số</button>
+</div>
+<!-- Khung hiển thị kết quả luận giải -->
+<div id="luanGiaiOutput" style="display: none; margin-top: 30px;"></div>
   </div>
 
   <!-- ========== TAB 3: QUÝ NHÂN ========== -->
@@ -1702,6 +1771,224 @@ window.addEventListener('DOMContentLoaded', ()=>{
         showInput();
         document.getElementById('namXem').value=new Date().getFullYear();
     })();
+<script>
+(function() {
+  // URL file luận giải trên GitHub (cùng repo)
+  const RULES_URL = 'https://raw.githubusercontent.com/Blackhelios9x/Bat-Tu-Quy-Nhan/main/luangiai.txt';
+  let loadedRules = [];
+
+  // ---------- LỚP XỬ LÝ KHÔNG GIAN ----------
+  const DIA_BAN = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
+
+  class LaSo {
+    constructor(cungData) { this.cung = cungData; }
+    normalize(name) {
+      return name.trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd').replace(/\s+/g, ' ');
+    }
+    timSao(starName, gocIndex) {
+      let maxW = 0;
+      const norm = this.normalize(starName);
+      for (let i = 0; i < 12; i++) {
+        if (!this.cung[i]) continue;
+        if (this.cung[i].some(s => this.normalize(s) === norm)) {
+          if (i === gocIndex) maxW = Math.max(maxW, 1.0);
+          else if (this.tamHop(gocIndex).includes(i)) maxW = Math.max(maxW, 0.8);
+          else if (i === this.doiCung(gocIndex)) maxW = Math.max(maxW, 0.7);
+          else if (i === this.nhiHop(gocIndex)) maxW = Math.max(maxW, 0.3);
+          else if (this.giapCung(gocIndex).includes(i)) maxW = Math.max(maxW, 0.2);
+        }
+      }
+      return maxW;
+    }
+    tamHop(idx) { const nhom = idx % 4; return [(nhom+4)%12, (nhom+8)%12]; }
+    doiCung(idx) { return (idx + 6) % 12; }
+    nhiHop(idx) {
+      const map = {5:8,4:9,3:10,2:11,1:6,0:7,8:5,9:4,10:3,11:2,6:1,7:0};
+      return map[idx];
+    }
+    giapCung(idx) { return [(idx+11)%12, (idx+1)%12]; }
+  }
+
+  // ---------- TRÍCH XUẤT LÁ SỐ TỪ DOM ----------
+  function extractLaSo() {
+    const cung = {};
+    for (let i = 1; i <= 12; i++) {
+      const chiEl = document.getElementById(`cung${i}Chi`);
+      const chi = chiEl ? chiEl.innerText.trim() : null;
+      if (!chi) continue;
+      const idx = DIA_BAN.indexOf(chi);
+      if (idx === -1) continue;
+
+      const stars = [];
+      ['Chinh','Trai','Phai'].forEach(loai => {
+        const el = document.getElementById(`c${i}${loai}`);
+        if (el && el.innerHTML) {
+          el.innerHTML.split(/<br\s*\/?>/i).forEach(line => {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = line;
+            const txt = tmp.textContent.trim();
+            if (txt) stars.push(txt);
+          });
+        }
+      });
+      cung[idx] = stars;
+    }
+    return new LaSo(cung);
+  }
+
+  // ---------- ĐỌC FILE TXT ----------
+  function parseRules(text) {
+    const lines = text.split(/\r?\n/);
+    const rules = [];
+    let cur = null;
+
+    for (let line of lines) {
+      line = line.trim();
+      if (!line) { if (cur?.condition_raw) { rules.push(cur); cur = null; } continue; }
+
+      // Dạng có dấu |
+      if (line.includes('|')) {
+        const parts = line.split('|').map(p => p.trim());
+        if (parts.length >= 3) {
+          if (cur?.condition_raw) rules.push(cur);
+          rules.push({
+            type: parts[0] || 'CHUNG',
+            condition_raw: parts[1],
+            loi_giai: parts[2],
+            tho: parts[3] || ''
+          });
+          cur = null;
+          continue;
+        }
+      }
+
+      // Dạng tự do: nhận diện dòng điều kiện
+      const hasCondition = /^(sao|hạn|cách|bộ|lưu|tiểu)\s/i.test(line) ||
+        (/\b(gặp|hội|đồng cung|tam hợp|chiếu|giáp)\b/i.test(line) &&
+         /[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*/.test(line));
+      if (hasCondition && !cur) {
+        cur = { type: '', condition_raw: line, loi_giai: '', tho: '' };
+      } else if (cur) {
+        if (line.startsWith('"') || line.startsWith('“') || line.startsWith('+') || line.startsWith('*')) {
+          cur.tho += (cur.tho ? '\n' : '') + line.replace(/^["'+*]\s*/, '').replace(/["'”“]$/, '');
+        } else {
+          cur.loi_giai += (cur.loi_giai ? ' ' : '') + line;
+        }
+      }
+    }
+    if (cur?.condition_raw) rules.push(cur);
+
+    return rules.map(r => {
+      let type = r.type;
+      if (!type) {
+        if (/hạn/i.test(r.condition_raw)) type = 'HẠN';
+        else if (/cách|cục/i.test(r.condition_raw)) type = 'CÁCH';
+        else type = 'SAO';
+      }
+      const stars = [];
+      const starRegex = /[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)?/g;
+      let m;
+      while ((m = starRegex.exec(r.condition_raw)) !== null) stars.push(m[0].trim().toUpperCase());
+      let relation = 'co_mat';
+      if (r.condition_raw.includes('đồng cung')) relation = 'dong_cung';
+      else if (r.condition_raw.includes('tam hợp')) relation = 'tam_hop';
+      else if (r.condition_raw.includes('đối cung') || r.condition_raw.includes('xung chiếu')) relation = 'doi_cung';
+      else if (r.condition_raw.includes('nhị hợp')) relation = 'nhi_hop';
+      else if (r.condition_raw.includes('giáp')) relation = 'giap';
+      else if (r.condition_raw.includes('hội') || r.condition_raw.includes('gặp')) relation = 'hoi_hop';
+      return { type, condition_raw: r.condition_raw, stars, relation, loi_giai: r.loi_giai, tho: r.tho };
+    });
+  }
+
+  // ---------- SO KHỚP QUY TẮC ----------
+  function matchRule(rule, laso, gocIdx) {
+    if (!rule.stars.length) return null;
+    let minW = 1.0;
+    for (const sao of rule.stars) {
+      const w = laso.timSao(sao, gocIdx);
+      if (w === 0) return null;
+      minW = Math.min(minW, w);
+    }
+    if (rule.relation === 'dong_cung' && minW < 1.0) return null;
+    if (rule.relation === 'tam_hop' && minW < 0.8) return null;
+    return {
+      type: rule.type,
+      condition: rule.condition_raw,
+      loi_giai: rule.loi_giai,
+      tho: rule.tho,
+      matchScore: Math.round(minW * 100)
+    };
+  }
+
+  // ---------- HÀM CHÍNH: THỰC HIỆN LUẬN GIẢI ----------
+  window.thucHienLuanGiai = function(gocCung = 'Mệnh') {
+    const laso = extractLaSo();
+    if (!laso) return alert('⚠️ Chưa có dữ liệu lá số.');
+    if (!loadedRules.length) return alert('⚠️ Chưa tải được quy tắc luận giải.');
+
+    let gocIdx = -1;
+    for (let i = 1; i <= 12; i++) {
+      const tenEl = document.getElementById(`cung${i}Ten`);
+      if (tenEl && tenEl.innerText.trim().toUpperCase() === gocCung.toUpperCase()) {
+        const chi = document.getElementById(`cung${i}Chi`).innerText.trim();
+        gocIdx = DIA_BAN.indexOf(chi);
+        break;
+      }
+    }
+    if (gocIdx === -1) gocIdx = 0; // fallback
+
+    const results = [];
+    for (const rule of loadedRules) {
+      const match = matchRule(rule, laso, gocIdx);
+      if (match) results.push(match);
+    }
+    results.sort((a, b) => b.matchScore - a.matchScore);
+
+    const container = document.getElementById('luanGiaiOutput');
+    container.style.display = 'block';
+    container.innerHTML = '<h3 style="color: var(--primary-d); margin-bottom: 20px;">📜 Kết quả luận giải</h3>';
+
+    if (!results.length) {
+      container.innerHTML += '<p style="color: var(--muted);">Không tìm thấy luận giải phù hợp.</p>';
+      return;
+    }
+
+    results.forEach(r => {
+      const div = document.createElement('div');
+      div.className = 'luangiai-item';
+      div.innerHTML = `
+        <div class="lg-header">
+          <span class="lg-type">${r.type}</span>
+          <span class="lg-score">🎯 ${r.matchScore}% khớp</span>
+        </div>
+        <div class="lg-dieu-kien">Điều kiện: ${r.condition}</div>
+        <div class="lg-loi-giai">${r.loi_giai}</div>
+        ${r.tho ? `<div class="lg-tho">📖 ${r.tho}</div>` : ''}
+      `;
+      container.appendChild(div);
+    });
+  };
+
+  // ---------- TỰ ĐỘNG TẢI FILE LUẬN GIẢI TỪ GITHUB ----------
+  async function fetchRules() {
+    try {
+      const resp = await fetch(RULES_URL);
+      if (!resp.ok) throw new Error('Không tải được file luận giải');
+      const text = await resp.text();
+      loadedRules = parseRules(text);
+      console.log(`✅ Đã nạp ${loadedRules.length} quy tắc luận giải.`);
+    } catch (err) {
+      console.warn('⚠️ Không thể tải quy tắc luận giải từ GitHub:', err);
+      loadedRules = [];
+    }
+  }
+
+  // Gọi ngay khi trang load
+  window.addEventListener('DOMContentLoaded', fetchRules);
+})();
+</script>
 </script>
 </body>
 </html>
