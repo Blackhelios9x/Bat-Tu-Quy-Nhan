@@ -1783,16 +1783,36 @@
 
     const DIA_BAN = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
 
+    // Bảng ánh xạ alias: tên trong luận giải -> tên trên lá số
+    const ALIAS_MAP = {
+        'THIÊN RIÊU': 'THIÊU DIÊU',
+        'THIÊN KHÔNG': 'THIÊN KHÔNG',
+        'ĐỊA KIẾP': 'ĐỊA KIẾP',
+        'HÓA LỘC': 'HÓA LỘC',
+        'HÓA QUYỀN': 'HÓA QUYỀN',
+        'HÓA KHOA': 'HÓA KHOA',
+        'HÓA KỊ': 'HÓA KỴ',
+        'HÓA KỴ': 'HÓA KỴ'
+    };
+
     class LaSo {
         constructor(cungData) { this.cung = cungData; }
         normalize(name) {
-            return name.replace(/\s*\(.*?\)\s*/g, '').trim().toLowerCase()
+            // Loại bỏ hậu tố (M), (V), (Đ), (B), (H) và các ký tự đặc biệt
+            let cleaned = name.replace(/\s*\(.*?\)\s*/g, '').trim();
+            // Chuẩn hóa về không dấu, lowercase
+            return cleaned.toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/đ/g, 'd').replace(/\s+/g, ' ');
         }
         timSao(starName, gocIndex) {
             let maxW = 0;
-            const norm = this.normalize(starName);
+            let norm = this.normalize(starName);
+            // Kiểm tra alias
+            const upperName = starName.toUpperCase().trim();
+            if (ALIAS_MAP[upperName]) {
+                norm = this.normalize(ALIAS_MAP[upperName]);
+            }
             for (let i = 0; i < 12; i++) {
                 if (!this.cung[i]) continue;
                 if (this.cung[i].some(s => this.normalize(s) === norm)) {
@@ -1827,11 +1847,11 @@
                     el.innerHTML.split(/<br\s*\/?>/i).forEach(line => {
                         const tmp = document.createElement('div');
                         tmp.innerHTML = line;
-                        const txt = tmp.textContent.trim();
+                        let txt = tmp.textContent.trim();
                         if (txt) {
-                            // Loại bỏ hậu tố kiểu (M), (V)...
-                            const clean = txt.replace(/\s*\(.*?\)\s*/g, '').trim();
-                            if (clean) stars.push(clean);
+                            // Loại bỏ hậu tố (M), (V), (Đ), (B), (H)
+                            txt = txt.replace(/\s*\(.*?\)\s*/g, '').trim();
+                            if (txt) stars.push(txt);
                         }
                     });
                 }
@@ -1866,7 +1886,7 @@
                 }
             }
 
-            // Dạng tự do: nhận diện dòng điều kiện
+            // Dạng tự do
             const hasCondition = /^(sao|hạn|cách|bộ|lưu|tiểu)\s/i.test(line) ||
                 (/\b(gặp|hội|đồng cung|tam hợp|chiếu|giáp)\b/i.test(line) &&
                  /[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*/.test(line));
@@ -1889,25 +1909,33 @@
                 else if (/cách|cục/i.test(r.condition_raw)) type = 'CÁCH';
                 else type = 'SAO';
             }
-            // Trích xuất các cụm từ (tên sao) và loại bỏ địa bàn, từ khóa
+            // Trích xuất tên sao - tách theo & + , hoặc "và"
+            const cond = r.condition_raw;
             const rawTokens = [];
-            const regex = /[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*/g;
+            // Regex bắt tên sao (2-4 từ viết hoa)
+            const regex = /[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+){0,3}/g;
             let m;
-            while ((m = regex.exec(r.condition_raw)) !== null) {
-                rawTokens.push(m[0].trim());
+            while ((m = regex.exec(cond)) !== null) {
+                const token = m[0].trim();
+                // Bỏ qua các từ không phải tên sao
+                if (!/^(tại|hoặc|gặp|hội|đồng|cung|tam|hợp|chiếu|xung|giáp|nhị|và|trong|nếu|có|thêm|đủ|ở)$/i.test(token)) {
+                    rawTokens.push(token);
+                }
             }
-            const DIA_BAN_LIST = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
+            // Lọc bỏ địa bàn
             const stars = rawTokens
-                .filter(t => !DIA_BAN_LIST.includes(t))
+                .filter(t => !DIA_BAN.includes(t))
                 .map(t => t.toUpperCase());
+            
             let relation = 'co_mat';
-            if (r.condition_raw.includes('đồng cung')) relation = 'dong_cung';
-            else if (r.condition_raw.includes('tam hợp')) relation = 'tam_hop';
-            else if (r.condition_raw.includes('đối cung') || r.condition_raw.includes('xung chiếu')) relation = 'doi_cung';
-            else if (r.condition_raw.includes('nhị hợp')) relation = 'nhi_hop';
-            else if (r.condition_raw.includes('giáp')) relation = 'giap';
-            else if (r.condition_raw.includes('hội') || r.condition_raw.includes('gặp')) relation = 'hoi_hop';
-            return { type, condition_raw: r.condition_raw, stars, relation, loi_giai: r.loi_giai, tho: r.tho };
+            if (cond.includes('đồng cung')) relation = 'dong_cung';
+            else if (cond.includes('tam hợp')) relation = 'tam_hop';
+            else if (cond.includes('đối cung') || cond.includes('xung chiếu')) relation = 'doi_cung';
+            else if (cond.includes('nhị hợp')) relation = 'nhi_hop';
+            else if (cond.includes('giáp')) relation = 'giap';
+            else if (cond.includes('hội') || cond.includes('gặp')) relation = 'hoi_hop';
+            
+            return { type, condition_raw: cond, stars, relation, loi_giai: r.loi_giai, tho: r.tho };
         });
     }
 
@@ -1994,5 +2022,4 @@
     window.addEventListener('DOMContentLoaded', fetchRules);
 })();
 </script>
-</body>
 </html>
