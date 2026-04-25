@@ -1772,71 +1772,176 @@
         document.getElementById('namXem').value=new Date().getFullYear();
     })();
 </script>
-
 <!-- ========================================================
-     SCRIPT 3: LUẬN GIẢI TỰ ĐỘNG
+     SCRIPT 3: LUẬN GIẢI TỰ ĐỘNG (ĐÃ SỬA)
      ======================================================== -->
 <script>
 (function() {
     const RULES_URL = 'https://raw.githubusercontent.com/Blackhelios9x/Bat-Tu-Quy-Nhan/main/luangiai.txt';
     let loadedRules = [];
 
+    // Địa bàn: Tý(0), Sửu(1), Dần(2), Mão(3), Thìn(4), Tỵ(5), Ngọ(6), Mùi(7), Thân(8), Dậu(9), Tuất(10), Hợi(11)
     const DIA_BAN = ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
 
-    // Bảng ánh xạ alias: tên trong luận giải -> tên trên lá số
+    // Bảng ánh xạ alias – tên trong file luận giải → tên chuẩn trên lá số
     const ALIAS_MAP = {
+        // Sao đơn
         'THIÊN RIÊU': 'THIÊU DIÊU',
-        'THIÊN KHÔNG': 'THIÊN KHÔNG',
-        'ĐỊA KIẾP': 'ĐỊA KIẾP',
+        'RIÊU': 'THIÊU DIÊU',
+        'NHẬT': 'THÁI DƯƠNG',
+        'NGUYỆT': 'THÁI ÂM',
+        'HỈ': 'THIÊN HỶ',
+        'HỶ': 'THIÊN HỶ',
+        'KHÔI': 'THIÊN KHÔI',
+        'VIỆT': 'THIÊN VIỆT',
+        'HÌNH': 'THIÊN HÌNH',
+        'MÃ': 'THIÊN MÃ',
+        'KHỐC': 'THIÊN KHỐC',
+        'HƯ': 'THIÊN HƯ',
+        'ĐỨC': 'THIÊN ĐỨC',
+        'HÌNH': 'THIÊN HÌNH',
+        'TƯỚNG': 'THIÊN TƯỚNG',
+        'LƯƠNG': 'THIÊN LƯƠNG',
+        'CƠ': 'THIÊN CƠ',
+        'ĐỒNG': 'THIÊN ĐỒNG',
+        'KHÚC': 'VĂN KHÚC',
+        'XƯƠNG': 'VĂN XƯƠNG',
+        'TẢ': 'TẢ PHÙ',
+        'HỮU': 'HỮU BẬT',
+        'KÌNH': 'KÌNH DƯƠNG',
+        'ĐÀ': 'ĐÀ LA',
+        'HỎA': 'HỎA TINH',
+        'LINH': 'LINH TINH',
+        'KHÔNG': 'THIÊN KHÔNG',
+        'KIẾP': 'ĐỊA KIẾP',
+        'LỘC': 'LỘC TỒN',
+        'HÌNH': 'THIÊN HÌNH',
+        // Hóa tinh
         'HÓA LỘC': 'HÓA LỘC',
         'HÓA QUYỀN': 'HÓA QUYỀN',
         'HÓA KHOA': 'HÓA KHOA',
         'HÓA KỊ': 'HÓA KỴ',
-        'HÓA KỴ': 'HÓA KỴ'
+        'HÓA KỴ': 'HÓA KỴ',
+        // Bộ sao gộp
+        'SÁT PHÁ LANG': '__SAT_PHA_LANG__',
+        'THẤT SÁT PHÁ QUÂN THAM LANG': '__SAT_PHA_LANG__',
+        'KHÔI VIỆT': '__KHOI_VIET__',
+        'THIÊN KHÔI THIÊN VIỆT': '__KHOI_VIET__',
+        'XƯƠNG KHÚC': '__XUONG_KHUC__',
+        'TẢ HỮU': '__TA_HUU__',
+        'KÌNH ĐÀ': '__KINH_DA__',
+        'HỎA LINH': '__HOA_LINH__',
+        'KHÔNG KIẾP': '__KHONG_KIEP__',
+        'LOAN HỈ': '__LOAN_HY__',
+        'LONG PHƯỢNG': '__LONG_PHUONG__',
+        'HAO': '__HAO__',
+        'SONG HAO': '__HAO__',
     };
 
+    // Các bộ sao giả – mở rộng thành mảng tên chuẩn
+    const COMPOUND_STARS = {
+        '__SAT_PHA_LANG__': ['THẤT SÁT', 'PHÁ QUÂN', 'THAM LANG'],
+        '__KHOI_VIET__': ['THIÊN KHÔI', 'THIÊN VIỆT'],
+        '__XUONG_KHUC__': ['VĂN XƯƠNG', 'VĂN KHÚC'],
+        '__TA_HUU__': ['TẢ PHÙ', 'HỮU BẬT'],
+        '__KINH_DA__': ['KÌNH DƯƠNG', 'ĐÀ LA'],
+        '__HOA_LINH__': ['HỎA TINH', 'LINH TINH'],
+        '__KHONG_KIEP__': ['THIÊN KHÔNG', 'ĐỊA KIẾP'],
+        '__LOAN_HY__': ['HỒNG LOAN', 'THIÊN HỶ'],
+        '__LONG_PHUONG__': ['LONG TRÌ', 'PHƯỢNG CÁC'],
+        '__HAO__': ['ĐẠI HAO', 'TIỂU HAO'],
+    };
+
+    // Lớp xử lý không gian lá số
     class LaSo {
         constructor(cungData) { this.cung = cungData; }
+
+        // Chuẩn hóa tên sao về dạng không dấu, lowercase, loại bỏ hậu tố (M), (V)...
         normalize(name) {
-            // Loại bỏ hậu tố (M), (V), (Đ), (B), (H) và các ký tự đặc biệt
             let cleaned = name.replace(/\s*\(.*?\)\s*/g, '').trim();
-            // Chuẩn hóa về không dấu, lowercase
             return cleaned.toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                 .replace(/đ/g, 'd').replace(/\s+/g, ' ');
         }
+
+        // Tìm sao (hỗ trợ alias & bộ sao) – trả về trọng số vị trí
         timSao(starName, gocIndex) {
-            let maxW = 0;
-            let norm = this.normalize(starName);
-            // Kiểm tra alias
-            const upperName = starName.toUpperCase().trim();
-            if (ALIAS_MAP[upperName]) {
-                norm = this.normalize(ALIAS_MAP[upperName]);
-            }
-            for (let i = 0; i < 12; i++) {
-                if (!this.cung[i]) continue;
-                if (this.cung[i].some(s => this.normalize(s) === norm)) {
-                    if (i === gocIndex) maxW = Math.max(maxW, 1.0);
-                    else if (this.tamHop(gocIndex).includes(i)) maxW = Math.max(maxW, 0.8);
-                    else if (i === this.doiCung(gocIndex)) maxW = Math.max(maxW, 0.7);
-                    else if (i === this.nhiHop(gocIndex)) maxW = Math.max(maxW, 0.3);
-                    else if (this.giapCung(gocIndex).includes(i)) maxW = Math.max(maxW, 0.2);
+            const upper = starName.toUpperCase().trim();
+            let targets = [];
+
+            // Nếu là bộ sao ảo
+            if (COMPOUND_STARS[upper]) {
+                targets = COMPOUND_STARS[upper];
+            } else if (ALIAS_MAP[upper]) {
+                const mapped = ALIAS_MAP[upper];
+                if (COMPOUND_STARS[mapped]) {
+                    targets = COMPOUND_STARS[mapped];
+                } else {
+                    targets = [mapped];
                 }
+            } else {
+                targets = [upper];
             }
-            return maxW;
+
+            // Tất cả các sao con trong bộ đều phải có mặt → lấy min weight
+            let minW = 1.0;
+            for (const target of targets) {
+                const normTarget = this.normalize(target);
+                let foundWeight = 0;
+                for (let i = 0; i < 12; i++) {
+                    if (!this.cung[i]) continue;
+                    if (this.cung[i].some(s => this.normalize(s) === normTarget)) {
+                        const w = this.getWeight(i, gocIndex);
+                        if (w > foundWeight) foundWeight = w;
+                    }
+                }
+                if (foundWeight === 0) return 0; // Một sao trong bộ không có → fail
+                minW = Math.min(minW, foundWeight);
+            }
+            return minW;
         }
-        tamHop(idx) { const nhom = idx % 4; return [(nhom+4)%12, (nhom+8)%12]; }
+
+        // Tính trọng số dựa trên vị trí
+        getWeight(pos, gocIndex) {
+            if (pos === gocIndex) return 1.0;                          // đồng cung
+            if (this.tamHop(gocIndex).includes(pos)) return 0.8;       // tam hợp
+            if (pos === this.doiCung(gocIndex)) return 0.7;            // đối cung
+            if (pos === this.nhiHop(gocIndex)) return 0.3;             // nhị hợp
+            if (this.giapCung(gocIndex).includes(pos)) return 0.2;     // giáp cung
+            return 0.1; // không liên quan nhưng có tồn tại (cho "hội")
+        }
+
+        // Tam hợp: 4 nhóm, mỗi nhóm 3 cung cách nhau 4 bước
+        // Nhóm 1: Tý(0), Thìn(4), Thân(8)   – (0,4,8)
+        // Nhóm 2: Sửu(1), Tỵ(5), Dậu(9)     – (1,5,9)
+        // Nhóm 3: Dần(2), Ngọ(6), Tuất(10)  – (2,6,10)
+        // Nhóm 4: Mão(3), Mùi(7), Hợi(11)   – (3,7,11)
+        tamHop(idx) {
+            const nhom = idx % 4;
+            return [(nhom + 4) % 12, (nhom + 8) % 12];
+        }
+
         doiCung(idx) { return (idx + 6) % 12; }
-        nhiHop(idx) { const map = {5:8,4:9,3:10,2:11,1:6,0:7,8:5,9:4,10:3,11:2,6:1,7:0}; return map[idx]; }
-        giapCung(idx) { return [(idx+11)%12, (idx+1)%12]; }
+
+        nhiHop(idx) {
+            const map = {5:8, 4:9, 3:10, 2:11, 1:6, 0:7, 8:5, 9:4, 10:3, 11:2, 6:1, 7:0};
+            return map[idx];
+        }
+
+        giapCung(idx) { return [(idx + 11) % 12, (idx + 1) % 12]; }
     }
 
+    // Trích xuất lá số từ DOM
     function extractLaSo() {
         const cung = {};
         for (let i = 1; i <= 12; i++) {
+            // Đọc cả thiên can và địa chi từ chi-name
             const chiEl = document.getElementById(`cung${i}Chi`);
-            const chi = chiEl ? chiEl.innerText.trim() : null;
-            if (!chi) continue;
+            const rawChiText = chiEl ? chiEl.innerText.trim() : null;
+            if (!rawChiText) continue;
+            // rawChiText có dạng "Can Chi" (vd: "Ất Tỵ") – lấy phần tử cuối cùng
+            const parts = rawChiText.split(/\s+/);
+            const chi = parts[parts.length - 1]; // lấy địa chi (từ cuối)
             const idx = DIA_BAN.indexOf(chi);
             if (idx === -1) continue;
 
@@ -1849,7 +1954,6 @@
                         tmp.innerHTML = line;
                         let txt = tmp.textContent.trim();
                         if (txt) {
-                            // Loại bỏ hậu tố (M), (V), (Đ), (B), (H)
                             txt = txt.replace(/\s*\(.*?\)\s*/g, '').trim();
                             if (txt) stars.push(txt);
                         }
@@ -1861,6 +1965,7 @@
         return new LaSo(cung);
     }
 
+    // Đọc file TXT luận giải
     function parseRules(text) {
         const lines = text.split(/\r?\n/);
         const rules = [];
@@ -1870,7 +1975,6 @@
             line = line.trim();
             if (!line) { if (cur?.condition_raw) { rules.push(cur); cur = null; } continue; }
 
-            // Dạng có dấu |
             if (line.includes('|')) {
                 const parts = line.split('|').map(p => p.trim());
                 if (parts.length >= 3) {
@@ -1886,7 +1990,6 @@
                 }
             }
 
-            // Dạng tự do
             const hasCondition = /^(sao|hạn|cách|bộ|lưu|tiểu)\s/i.test(line) ||
                 (/\b(gặp|hội|đồng cung|tam hợp|chiếu|giáp)\b/i.test(line) &&
                  /[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+)*/.test(line));
@@ -1909,24 +2012,20 @@
                 else if (/cách|cục/i.test(r.condition_raw)) type = 'CÁCH';
                 else type = 'SAO';
             }
-            // Trích xuất tên sao - tách theo & + , hoặc "và"
             const cond = r.condition_raw;
             const rawTokens = [];
-            // Regex bắt tên sao (2-4 từ viết hoa)
             const regex = /[A-ZÀ-Ỹ][a-zà-ỹ]+(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]+){0,3}/g;
             let m;
             while ((m = regex.exec(cond)) !== null) {
                 const token = m[0].trim();
-                // Bỏ qua các từ không phải tên sao
-                if (!/^(tại|hoặc|gặp|hội|đồng|cung|tam|hợp|chiếu|xung|giáp|nhị|và|trong|nếu|có|thêm|đủ|ở)$/i.test(token)) {
+                if (!/^(tại|hoặc|gặp|hội|đồng|cung|tam|hợp|chiếu|xung|giáp|nhị|và|trong|nếu|có|thêm|đủ|ở|khi|các|bộ)$/i.test(token)) {
                     rawTokens.push(token);
                 }
             }
-            // Lọc bỏ địa bàn
             const stars = rawTokens
                 .filter(t => !DIA_BAN.includes(t))
                 .map(t => t.toUpperCase());
-            
+
             let relation = 'co_mat';
             if (cond.includes('đồng cung')) relation = 'dong_cung';
             else if (cond.includes('tam hợp')) relation = 'tam_hop';
@@ -1934,11 +2033,12 @@
             else if (cond.includes('nhị hợp')) relation = 'nhi_hop';
             else if (cond.includes('giáp')) relation = 'giap';
             else if (cond.includes('hội') || cond.includes('gặp')) relation = 'hoi_hop';
-            
+
             return { type, condition_raw: cond, stars, relation, loi_giai: r.loi_giai, tho: r.tho };
         });
     }
 
+    // So khớp quy tắc với lá số
     function matchRule(rule, laso, gocIdx) {
         if (!rule.stars.length) return null;
         let minW = 1.0;
@@ -1958,6 +2058,7 @@
         };
     }
 
+    // Hàm chính – gọi từ nút
     window.thucHienLuanGiai = function(gocCung = 'Mệnh') {
         const laso = extractLaSo();
         if (!laso) return alert('⚠️ Chưa có dữ liệu lá số.');
@@ -1967,7 +2068,10 @@
         for (let i = 1; i <= 12; i++) {
             const tenEl = document.getElementById(`cung${i}Ten`);
             if (tenEl && tenEl.innerText.trim().toUpperCase() === gocCung.toUpperCase()) {
-                const chi = document.getElementById(`cung${i}Chi`).innerText.trim();
+                const chiEl = document.getElementById(`cung${i}Chi`);
+                const rawChiText = chiEl ? chiEl.innerText.trim() : '';
+                const parts = rawChiText.split(/\s+/);
+                const chi = parts[parts.length - 1];
                 gocIdx = DIA_BAN.indexOf(chi);
                 break;
             }
@@ -2006,6 +2110,7 @@
         });
     };
 
+    // Tải file luận giải từ GitHub
     async function fetchRules() {
         try {
             const resp = await fetch(RULES_URL);
@@ -2022,4 +2127,5 @@
     window.addEventListener('DOMContentLoaded', fetchRules);
 })();
 </script>
+
 </html>
