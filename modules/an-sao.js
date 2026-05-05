@@ -1,5 +1,5 @@
 // ========================================================
-// MODULE TỬ VI – LÁ SỐ (HOÀN CHỈNH - MOBILE FULL WIDTH)
+// MODULE TỬ VI – LÁ SỐ (HOÀN CHỈNH – HOẠT ĐỘNG TRÊN MOBILE)
 // ========================================================
 class TuViModule extends HTMLElement {
   constructor() {
@@ -175,7 +175,7 @@ class TuViModule extends HTMLElement {
           pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,0.6); border: 1px solid #333; line-height: 1.2;
         }
 
-        /* ========== MOBILE: FULL WIDTH, Ô RỘNG HƠN ========== */
+        /* ========== MOBILE ========== */
         @media (max-width: 700px) {
           #resultScreen { padding: 0; margin: 0; }
           .tử-vi-grid {
@@ -243,21 +243,20 @@ class TuViModule extends HTMLElement {
           <div class="trung-tam cung">
             <div class="info-compact">
               <div class="name-row" id="tenHoTenDisplay">NGUYỄN VĂN A</div>
-              <div class="info-line"><span class="label">Năm:</span><span class="value" id="namInfo">2025 Ất Tỵ</span></div>
-              <div class="info-line"><span class="label">Tháng:</span><span class="value" id="thangInfo">5 (5) Nhâm Ngọ</span></div>
-              <div class="info-line"><span class="label">Ngày:</span><span class="value" id="ngayInfo">6 (6) Ất Dậu</span></div>
-              <div class="info-line"><span class="label">Giờ:</span><span class="value" id="gioInfo">04:00 Mậu Dần</span></div>
-              <div class="info-line"><span class="label">Năm xem:</span><span class="value" id="namXemDisplay">2026</span></div>
-              <div class="info-line"><span class="label">Tuổi:</span><span class="value" id="tuoiAmDisplay">2 tuổi</span></div>
-              <div class="info-line"><span class="label">Âm dương:</span><span class="value" id="amDuongDisplay">Âm Nam</span></div>
-              <div class="info-line"><span class="label">Mệnh:</span><span class="value" id="menhDisplay">Phúc Đăng Hỏa</span></div>
-              <div class="info-line"><span class="label">Cục:</span><span class="value" id="cucDisplay">Kim Tứ Cục</span></div>
-              <div class="info-line"><span class="label">Chủ mệnh:</span><span class="value" id="chuMenh">Liêm Trinh</span></div>
-              <div class="info-line"><span class="label">Chủ thân:</span><span class="value" id="chuThan">Thiên Lương</span></div>
-              <div class="info-line"><span class="label">Thân cư:</span><span class="value" id="thanCuDisplay">Ngọ</span></div>
+              <div class="info-line"><span class="label">Năm:</span><span class="value" id="namInfo"></span></div>
+              <div class="info-line"><span class="label">Tháng:</span><span class="value" id="thangInfo"></span></div>
+              <div class="info-line"><span class="label">Ngày:</span><span class="value" id="ngayInfo"></span></div>
+              <div class="info-line"><span class="label">Giờ:</span><span class="value" id="gioInfo"></span></div>
+              <div class="info-line"><span class="label">Năm xem:</span><span class="value" id="namXemDisplay"></span></div>
+              <div class="info-line"><span class="label">Tuổi:</span><span class="value" id="tuoiAmDisplay"></span></div>
+              <div class="info-line"><span class="label">Âm dương:</span><span class="value" id="amDuongDisplay"></span></div>
+              <div class="info-line"><span class="label">Mệnh:</span><span class="value" id="menhDisplay"></span></div>
+              <div class="info-line"><span class="label">Cục:</span><span class="value" id="cucDisplay"></span></div>
+              <div class="info-line"><span class="label">Chủ mệnh:</span><span class="value" id="chuMenh"></span></div>
+              <div class="info-line"><span class="label">Chủ thân:</span><span class="value" id="chuThan"></span></div>
+              <div class="info-line"><span class="label">Thân cư:</span><span class="value" id="thanCuDisplay"></span></div>
               <div class="meta-note">
-                <span id="thuanNghichDisplay">Âm Dương nghịch lý</span> ·
-                <span id="soSanhDisplay">Mệnh khắc Cục</span>
+                <span id="thuanNghichDisplay"></span> · <span id="soSanhDisplay"></span>
               </div>
               <div style="font-size:0.6rem; text-align:right; margin-top:3px;" id="ngayLapDisplay"></div>
             </div>
@@ -268,6 +267,7 @@ class TuViModule extends HTMLElement {
   }
 
   connectedCallback() {
+    // Kiểm tra thư viện Solar đã sẵn sàng chưa
     if (typeof Solar === 'undefined') {
       const errorDiv = this.querySelector('#inputError');
       if (errorDiv) {
@@ -280,7 +280,7 @@ class TuViModule extends HTMLElement {
           clearInterval(checkInterval);
           if (errorDiv) errorDiv.style.display = 'none';
           this._initEvents();
-        } else if (++attempts > 10) {
+        } else if (++attempts > 15) {
           clearInterval(checkInterval);
           if (errorDiv) errorDiv.textContent = 'Không thể tải thư viện lịch. Vui lòng tải lại trang.';
         }
@@ -291,11 +291,29 @@ class TuViModule extends HTMLElement {
   }
 
   _initEvents() {
-    this.querySelector('#namXem').value = new Date().getFullYear();
+    // Gán năm xem mặc định là năm hiện tại
+    const namXemInput = this.querySelector('#namXem');
+    if (namXemInput) namXemInput.value = new Date().getFullYear();
+
+    // Gán sự kiện cho nút XEM LÁ SỐ (chỉ dùng click, không dùng touchend để tránh double)
     const btn = this.querySelector('#btnXemLaSo');
-    btn.addEventListener('click', () => this._updateLaSo());
-    btn.addEventListener('touchend', (e) => { e.preventDefault(); this._updateLaSo(); });
-    this.querySelector('#backBtn').addEventListener('click', () => this._showInput());
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this._updateLaSo();
+      });
+    }
+
+    // Nút quay lại
+    const backBtn = this.querySelector('#backBtn');
+    if (backBtn) {
+      backBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this._showInput();
+      });
+    }
+
+    // Mặc định hiển thị form nhập
     this._showInput();
   }
 
@@ -334,6 +352,7 @@ class TuViModule extends HTMLElement {
     };
   }
 
+  // ========== CÁC HÀM TÍNH TOÁN (GIỮ NGUYÊN TỪ BẢN GỐC) ==========
   _buildDoSangMap() {
     const rawData = {
       'Tý': { M: ['thiên cơ', 'thiên phủ', 'thái âm', 'thiên tướng', 'thiên lương', 'phá quân', 'lộc tồn'], V: ['vũ khúc', 'thiên đồng', 'cự môn', 'tham lang', 'thái dương'], D: ['văn xương', 'văn khúc'], B: ['tử vi', 'liêm trinh'], H: ['thái dương', 'kình dương', 'hỏa tinh', 'linh tinh'] },
@@ -836,7 +855,18 @@ class TuViModule extends HTMLElement {
     return parseInt(cleaned, 10);
   }
 
+  // ========== XỬ LÝ LÁ SỐ CHÍNH ==========
   _updateLaSo() {
+    // Kiểm tra thư viện Solar một lần nữa
+    if (typeof Solar === 'undefined') {
+      const errorDiv = this.querySelector('#inputError');
+      if (errorDiv) {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = 'Thư viện lịch chưa sẵn sàng. Vui lòng thử lại sau.';
+      }
+      return;
+    }
+
     const errorDiv = this.querySelector('#inputError');
     errorDiv.style.display = 'none';
     errorDiv.textContent = '';
@@ -1091,12 +1121,16 @@ class TuViModule extends HTMLElement {
     const r = this.querySelector('#resultScreen');
     if (i) i.style.display = 'block';
     if (r) r.style.display = 'none';
+    // Cuộn lên đầu trang
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   _showResult() {
     const i = this.querySelector('#inputScreen');
     const r = this.querySelector('#resultScreen');
     if (i) i.style.display = 'none';
     if (r) r.style.display = 'block';
+    // Cuộn đến lá số
+    r.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
