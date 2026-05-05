@@ -177,34 +177,41 @@ class TuViModule extends HTMLElement {
 
         /* ========== MOBILE ========== */
         @media (max-width: 700px) {
-          #resultScreen { padding: 0; margin: 0; }
+          #resultScreen {
+            padding: 0;
+            margin: 0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
           .tử-vi-grid {
-            width: 100%;
+            width: 500px;
+            min-width: 500px;
+            height: 500px;
+            min-height: unset;
             margin: 0;
             gap: 1px;
             border: 1px solid #4a2e1e;
             border-radius: 0;
             aspect-ratio: auto;
-            min-height: 200vw;
           }
           .cung {
             border: none;
             border-radius: 0;
             padding: 2px 1px 1px;
           }
-          .cung-ten { font-size: 0.45rem; }
-          .chi-name { font-size: 0.35rem; }
-          .chinh-tinh { font-size: 0.5rem; line-height: 1.2; }
-          .sao-trai, .sao-phai { font-size: 0.45rem; }
-          .truong-sinh { font-size: 0.4rem; }
-          .dai-van-corner { font-size: 0.4rem; }
-          .cung-than { font-size: 0.45rem; }
-          .trung-tam { font-size: 0.6rem; padding: 4px; }
-          .name-row { font-size: 0.8rem; }
-          .info-line .label { font-size: 0.55rem; width: 40%; }
-          .info-line .value { font-size: 0.6rem; }
+          .cung-ten { font-size: 0.5rem; }
+          .chi-name { font-size: 0.4rem; }
+          .chinh-tinh { font-size: 0.6rem; line-height: 1.2; }
+          .sao-trai, .sao-phai { font-size: 0.5rem; }
+          .truong-sinh { font-size: 0.45rem; }
+          .dai-van-corner { font-size: 0.45rem; }
+          .cung-than { font-size: 0.5rem; }
+          .trung-tam { font-size: 0.65rem; padding: 5px; }
+          .name-row { font-size: 0.85rem; }
+          .info-line .label { font-size: 0.6rem; width: 40%; }
+          .info-line .value { font-size: 0.65rem; }
           .meta-note { font-size: 0.6rem; }
-          .tuan-triet-marker { font-size: 0.35rem; padding: 1px 2px; }
+          .tuan-triet-marker { font-size: 0.4rem; padding: 1px 2px; }
           .form-group label { width: 100px; font-size: 1rem; }
           #inputScreen { padding: 20px 15px; }
           .year-input { min-width: 70px; }
@@ -267,7 +274,6 @@ class TuViModule extends HTMLElement {
   }
 
   connectedCallback() {
-    // Kiểm tra thư viện Solar đã sẵn sàng chưa
     if (typeof Solar === 'undefined') {
       const errorDiv = this.querySelector('#inputError');
       if (errorDiv) {
@@ -291,11 +297,9 @@ class TuViModule extends HTMLElement {
   }
 
   _initEvents() {
-    // Gán năm xem mặc định là năm hiện tại
     const namXemInput = this.querySelector('#namXem');
     if (namXemInput) namXemInput.value = new Date().getFullYear();
 
-    // Gán sự kiện cho nút XEM LÁ SỐ (chỉ dùng click, không dùng touchend để tránh double)
     const btn = this.querySelector('#btnXemLaSo');
     if (btn) {
       btn.addEventListener('click', (e) => {
@@ -304,7 +308,6 @@ class TuViModule extends HTMLElement {
       });
     }
 
-    // Nút quay lại
     const backBtn = this.querySelector('#backBtn');
     if (backBtn) {
       backBtn.addEventListener('click', (e) => {
@@ -313,7 +316,6 @@ class TuViModule extends HTMLElement {
       });
     }
 
-    // Mặc định hiển thị form nhập
     this._showInput();
   }
 
@@ -352,7 +354,7 @@ class TuViModule extends HTMLElement {
     };
   }
 
-  // ========== CÁC HÀM TÍNH TOÁN (GIỮ NGUYÊN TỪ BẢN GỐC) ==========
+  // ========== CÁC HÀM TÍNH TOÁN ==========
   _buildDoSangMap() {
     const rawData = {
       'Tý': { M: ['thiên cơ', 'thiên phủ', 'thái âm', 'thiên tướng', 'thiên lương', 'phá quân', 'lộc tồn'], V: ['vũ khúc', 'thiên đồng', 'cự môn', 'tham lang', 'thái dương'], D: ['văn xương', 'văn khúc'], B: ['tử vi', 'liêm trinh'], H: ['thái dương', 'kình dương', 'hỏa tinh', 'linh tinh'] },
@@ -857,7 +859,6 @@ class TuViModule extends HTMLElement {
 
   // ========== XỬ LÝ LÁ SỐ CHÍNH ==========
   _updateLaSo() {
-    // Kiểm tra thư viện Solar một lần nữa
     if (typeof Solar === 'undefined') {
       const errorDiv = this.querySelector('#inputError');
       if (errorDiv) {
@@ -1121,7 +1122,6 @@ class TuViModule extends HTMLElement {
     const r = this.querySelector('#resultScreen');
     if (i) i.style.display = 'block';
     if (r) r.style.display = 'none';
-    // Cuộn lên đầu trang
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   _showResult() {
@@ -1129,7 +1129,6 @@ class TuViModule extends HTMLElement {
     const r = this.querySelector('#resultScreen');
     if (i) i.style.display = 'none';
     if (r) r.style.display = 'block';
-    // Cuộn đến lá số
     r.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
