@@ -1,5 +1,5 @@
 // ========================================================
-// MODULE TỬ VI – LÁ SỐ (HOÀN CHỈNH, HOẠT ĐỘNG TRÊN MOBILE)
+// MODULE TỬ VI – LÁ SỐ (HOÀN CHỈNH, MOBILE FULL WIDTH)
 // ========================================================
 class TuViModule extends HTMLElement {
   constructor() {
@@ -175,15 +175,23 @@ class TuViModule extends HTMLElement {
           pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,0.6); border: 1px solid #333; line-height: 1.2;
         }
 
-        /* ========== MOBILE ========== */
+        /* ========== MOBILE: FULL WIDTH ========== */
         @media (max-width: 700px) {
-          #resultScreen { padding: 0 2px; }
+          #resultScreen {
+            padding: 0;              /* bỏ padding để tràn viền */
+            margin: 0;
+          }
           .tử-vi-grid {
-            aspect-ratio: auto;
             width: 100%;
-            min-height: 190vw;
-            gap: 2px;
-            border-width: 3px;
+            margin: 0;
+            gap: 1px;               /* giảm khoảng cách giữa các ô */
+            border: 2px solid #4a2e1e; /* viền mảnh hơn */
+            border-radius: 0;        /* không bo góc để tận dụng không gian */
+            aspect-ratio: auto;
+            min-height: 200vw;      /* kéo dài thêm để dễ đọc */
+          }
+          .cung {
+            border-radius: 2px;      /* bo góc nhẹ cho từng ô */
           }
           .cung-ten { font-size: 0.45rem; }
           .chi-name { font-size: 0.35rem; }
@@ -220,15 +228,16 @@ class TuViModule extends HTMLElement {
       <div id="resultScreen">
         <button class="back-btn" id="backBtn">← Nhập lại</button>
         <div class="tử-vi-grid" id="tuViGrid">
-          <div class="cung c-1"  id="cung1"><span class="chi-name" id="cung1Chi">TỴ</span><span class="cung-ten" id="cung1Ten">MỆNH</span><span class="cung-than" id="cung1Than"></span><div class="chinh-tinh" id="c1Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c1Trai"></div><div class="sao-phai" id="c1Phai"></div></div><div class="truong-sinh" id="c1TruongSinh"></div><span class="dai-van-corner" id="dvCorner1"></span></div>
-          <div class="cung c-2"  id="cung2"><span class="chi-name" id="cung2Chi">NGỌ</span><span class="cung-ten" id="cung2Ten">PHỤ MẪU</span><span class="cung-than" id="cung2Than"></span><div class="chinh-tinh" id="c2Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c2Trai"></div><div class="sao-phai" id="c2Phai"></div></div><div class="truong-sinh" id="c2TruongSinh"></div><span class="dai-van-corner" id="dvCorner2"></span></div>
-          <div class="cung c-3"  id="cung3"><span class="chi-name" id="cung3Chi">MÙI</span><span class="cung-ten" id="cung3Ten">PHÚC ĐỨC</span><span class="cung-than" id="cung3Than"></span><div class="chinh-tinh" id="c3Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c3Trai"></div><div class="sao-phai" id="c3Phai"></div></div><div class="truong-sinh" id="c3TruongSinh"></div><span class="dai-van-corner" id="dvCorner3"></span></div>
-          <div class="cung c-4"  id="cung4"><span class="chi-name" id="cung4Chi">THÂN</span><span class="cung-ten" id="cung4Ten">ĐIỀN TRẠCH</span><span class="cung-than" id="cung4Than"></span><div class="chinh-tinh" id="c4Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c4Trai"></div><div class="sao-phai" id="c4Phai"></div></div><div class="truong-sinh" id="c4TruongSinh"></div><span class="dai-van-corner" id="dvCorner4"></span></div>
-          <div class="cung c-5"  id="cung5"><span class="chi-name" id="cung5Chi">DẬU</span><span class="cung-ten" id="cung5Ten">QUAN LỘC</span><span class="cung-than" id="cung5Than"></span><div class="chinh-tinh" id="c5Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c5Trai"></div><div class="sao-phai" id="c5Phai"></div></div><div class="truong-sinh" id="c5TruongSinh"></div><span class="dai-van-corner" id="dvCorner5"></span></div>
-          <div class="cung c-6"  id="cung6"><span class="chi-name" id="cung6Chi">TUẤT</span><span class="cung-ten" id="cung6Ten">NÔ BỘC</span><span class="cung-than" id="cung6Than"></span><div class="chinh-tinh" id="c6Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c6Trai"></div><div class="sao-phai" id="c6Phai"></div></div><div class="truong-sinh" id="c6TruongSinh"></div><span class="dai-van-corner" id="dvCorner6"></span></div>
-          <div class="cung c-7"  id="cung7"><span class="chi-name" id="cung7Chi">HỢI</span><span class="cung-ten" id="cung7Ten">THIÊN DI</span><span class="cung-than" id="cung7Than"></span><div class="chinh-tinh" id="c7Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c7Trai"></div><div class="sao-phai" id="c7Phai"></div></div><div class="truong-sinh" id="c7TruongSinh"></div><span class="dai-van-corner" id="dvCorner7"></span></div>
-          <div class="cung c-8"  id="cung8"><span class="chi-name" id="cung8Chi">TÝ</span><span class="cung-ten" id="cung8Ten">TẬT ÁCH</span><span class="cung-than" id="cung8Than"></span><div class="chinh-tinh" id="c8Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c8Trai"></div><div class="sao-phai" id="c8Phai"></div></div><div class="truong-sinh" id="c8TruongSinh"></div><span class="dai-van-corner" id="dvCorner8"></span></div>
-          <div class="cung c-9"  id="cung9"><span class="chi-name" id="cung9Chi">SỬU</span><span class="cung-ten" id="cung9Ten">TÀI BẠCH</span><span class="cung-than" id="cung9Than"></span><div class="chinh-tinh" id="c9Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c9Trai"></div><div class="sao-phai" id="c9Phai"></div></div><div class="truong-sinh" id="c9TruongSinh"></div><span class="dai-van-corner" id="dvCorner9"></span></div>
+          <!-- 12 cung giữ nguyên -->
+          <div class="cung c-1" id="cung1"><span class="chi-name" id="cung1Chi">TỴ</span><span class="cung-ten" id="cung1Ten">MỆNH</span><span class="cung-than" id="cung1Than"></span><div class="chinh-tinh" id="c1Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c1Trai"></div><div class="sao-phai" id="c1Phai"></div></div><div class="truong-sinh" id="c1TruongSinh"></div><span class="dai-van-corner" id="dvCorner1"></span></div>
+          <div class="cung c-2" id="cung2"><span class="chi-name" id="cung2Chi">NGỌ</span><span class="cung-ten" id="cung2Ten">PHỤ MẪU</span><span class="cung-than" id="cung2Than"></span><div class="chinh-tinh" id="c2Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c2Trai"></div><div class="sao-phai" id="c2Phai"></div></div><div class="truong-sinh" id="c2TruongSinh"></div><span class="dai-van-corner" id="dvCorner2"></span></div>
+          <div class="cung c-3" id="cung3"><span class="chi-name" id="cung3Chi">MÙI</span><span class="cung-ten" id="cung3Ten">PHÚC ĐỨC</span><span class="cung-than" id="cung3Than"></span><div class="chinh-tinh" id="c3Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c3Trai"></div><div class="sao-phai" id="c3Phai"></div></div><div class="truong-sinh" id="c3TruongSinh"></div><span class="dai-van-corner" id="dvCorner3"></span></div>
+          <div class="cung c-4" id="cung4"><span class="chi-name" id="cung4Chi">THÂN</span><span class="cung-ten" id="cung4Ten">ĐIỀN TRẠCH</span><span class="cung-than" id="cung4Than"></span><div class="chinh-tinh" id="c4Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c4Trai"></div><div class="sao-phai" id="c4Phai"></div></div><div class="truong-sinh" id="c4TruongSinh"></div><span class="dai-van-corner" id="dvCorner4"></span></div>
+          <div class="cung c-5" id="cung5"><span class="chi-name" id="cung5Chi">DẬU</span><span class="cung-ten" id="cung5Ten">QUAN LỘC</span><span class="cung-than" id="cung5Than"></span><div class="chinh-tinh" id="c5Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c5Trai"></div><div class="sao-phai" id="c5Phai"></div></div><div class="truong-sinh" id="c5TruongSinh"></div><span class="dai-van-corner" id="dvCorner5"></span></div>
+          <div class="cung c-6" id="cung6"><span class="chi-name" id="cung6Chi">TUẤT</span><span class="cung-ten" id="cung6Ten">NÔ BỘC</span><span class="cung-than" id="cung6Than"></span><div class="chinh-tinh" id="c6Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c6Trai"></div><div class="sao-phai" id="c6Phai"></div></div><div class="truong-sinh" id="c6TruongSinh"></div><span class="dai-van-corner" id="dvCorner6"></span></div>
+          <div class="cung c-7" id="cung7"><span class="chi-name" id="cung7Chi">HỢI</span><span class="cung-ten" id="cung7Ten">THIÊN DI</span><span class="cung-than" id="cung7Than"></span><div class="chinh-tinh" id="c7Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c7Trai"></div><div class="sao-phai" id="c7Phai"></div></div><div class="truong-sinh" id="c7TruongSinh"></div><span class="dai-van-corner" id="dvCorner7"></span></div>
+          <div class="cung c-8" id="cung8"><span class="chi-name" id="cung8Chi">TÝ</span><span class="cung-ten" id="cung8Ten">TẬT ÁCH</span><span class="cung-than" id="cung8Than"></span><div class="chinh-tinh" id="c8Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c8Trai"></div><div class="sao-phai" id="c8Phai"></div></div><div class="truong-sinh" id="c8TruongSinh"></div><span class="dai-van-corner" id="dvCorner8"></span></div>
+          <div class="cung c-9" id="cung9"><span class="chi-name" id="cung9Chi">SỬU</span><span class="cung-ten" id="cung9Ten">TÀI BẠCH</span><span class="cung-than" id="cung9Than"></span><div class="chinh-tinh" id="c9Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c9Trai"></div><div class="sao-phai" id="c9Phai"></div></div><div class="truong-sinh" id="c9TruongSinh"></div><span class="dai-van-corner" id="dvCorner9"></span></div>
           <div class="cung c-10" id="cung10"><span class="chi-name" id="cung10Chi">DẦN</span><span class="cung-ten" id="cung10Ten">TỬ TỨC</span><span class="cung-than" id="cung10Than"></span><div class="chinh-tinh" id="c10Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c10Trai"></div><div class="sao-phai" id="c10Phai"></div></div><div class="truong-sinh" id="c10TruongSinh"></div><span class="dai-van-corner" id="dvCorner10"></span></div>
           <div class="cung c-11" id="cung11"><span class="chi-name" id="cung11Chi">MÃO</span><span class="cung-ten" id="cung11Ten">PHU THÊ</span><span class="cung-than" id="cung11Than"></span><div class="chinh-tinh" id="c11Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c11Trai"></div><div class="sao-phai" id="c11Phai"></div></div><div class="truong-sinh" id="c11TruongSinh"></div><span class="dai-van-corner" id="dvCorner11"></span></div>
           <div class="cung c-12" id="cung12"><span class="chi-name" id="cung12Chi">THÌN</span><span class="cung-ten" id="cung12Ten">HUYNH ĐỆ</span><span class="cung-than" id="cung12Than"></span><div class="chinh-tinh" id="c12Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c12Trai"></div><div class="sao-phai" id="c12Phai"></div></div><div class="truong-sinh" id="c12TruongSinh"></div><span class="dai-van-corner" id="dvCorner12"></span></div>
@@ -292,7 +301,7 @@ class TuViModule extends HTMLElement {
     this._showInput();
   }
 
-  // ========== HẰNG SỐ ==========
+  // ========== HẰNG SỐ & TOÀN BỘ LOGIC AN SAO (giữ nguyên) ==========
   static get CAN() { return ['Giáp','Ất','Bính','Đinh','Mậu','Kỷ','Canh','Tân','Nhâm','Quý']; }
   static get CHI() { return ['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi']; }
   static get CAN_HAN() { return ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']; }
@@ -829,7 +838,6 @@ class TuViModule extends HTMLElement {
     return parseInt(cleaned, 10);
   }
 
-  // ========== XỬ LÝ LÁ SỐ CHÍNH ==========
   _updateLaSo() {
     const errorDiv = this.querySelector('#inputError');
     errorDiv.style.display = 'none';
