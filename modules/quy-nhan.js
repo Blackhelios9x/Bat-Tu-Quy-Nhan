@@ -1,9 +1,16 @@
 // ========================================================
-// MODULE QUÝ NHÂN
+// MODULE QUÝ NHÂN (đã sửa phần chọn giờ)
 // ========================================================
 class QuyNhanModule extends HTMLElement {
     constructor() {
         super();
+        // Tạo danh sách option giờ
+        const hourOptions = ['<option value="">-- Chọn giờ (mặc định 00:00) --</option>'];
+        for (let h = 0; h <= 23; h++) {
+            const val = String(h).padStart(2, '0') + ':00';
+            hourOptions.push(`<option value="${val}">${val}</option>`);
+        }
+
         this.innerHTML = `
             <style>
                 .card {
@@ -25,7 +32,7 @@ class QuyNhanModule extends HTMLElement {
                     width: 100%;
                 }
                 input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(166,124,78,.15); }
-                input.invalid { border-color: var(--err) !important; }
+                input.invalid, select.invalid { border-color: var(--err) !important; }
                 .errtxt { color: var(--err); font-size: .75rem; margin-top: 5px; }
                 .btn-main {
                     display: block; width: fit-content; margin: 20px auto 30px;
@@ -72,7 +79,7 @@ class QuyNhanModule extends HTMLElement {
                 <div class="ctitle">⭐ Thông tin của bạn</div>
                 <div class="irow">
                     <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="myDate" placeholder="dd/mm/yyyy" value="15/06/1984" inputmode="numeric" data-mask="date"></div>
-                    <div class="ig"><label>Giờ sinh (hh:mm)</label><input type="text" id="myTime" placeholder="11:30" inputmode="numeric"></div>
+                    <div class="ig"><label>Giờ sinh</label><select id="myTime">${hourOptions.join('')}</select></div>
                 </div>
                 <div id="myErr" class="errtxt"></div>
             </div>
@@ -113,11 +120,11 @@ class QuyNhanModule extends HTMLElement {
     }
 
     _parseTime(s) {
-        if (!s||!s.trim()) return {h:0,min:0};
+        if (!s || !s.trim()) return null; // chuỗi rỗng trả về null
         const m = s.trim().match(/^(\d{1,2}):(\d{2})$/);
-        if (!m) return null;
+        if (!m) return false; // sai định dạng
         const h=+m[1], min=+m[2];
-        if (h<0||h>23||min<0||min>59) return null;
+        if (h<0||h>23||min<0||min>59) return false;
         return {h, min};
     }
 
@@ -153,13 +160,19 @@ class QuyNhanModule extends HTMLElement {
 
     _setupInputs() {
         const cont = this.querySelector('#pInputs');
+        // Tạo danh sách option giờ cho từng người
+        const personHourOptions = ['<option value="">-- Chọn giờ (mặc định 00:00) --</option>'];
+        for (let h = 0; h <= 23; h++) {
+            const val = String(h).padStart(2, '0') + ':00';
+            personHourOptions.push(`<option value="${val}">${val}</option>`);
+        }
         for (let i=1; i<=5; i++) {
             cont.innerHTML += `
                 <div class="prow" id="pr${i}">
                     <div class="irow">
                         <div class="pnum">${i}</div>
                         <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="p${i}d" class="w" placeholder="dd/mm/yyyy" inputmode="numeric" data-mask="date"></div>
-                        <div class="ig"><label>Giờ (hh:mm)</label><input type="text" id="p${i}t" class="n" placeholder="00:00" inputmode="numeric"></div>
+                        <div class="ig"><label>Giờ sinh</label><select id="p${i}t" class="n">${personHourOptions.join('')}</select></div>
                     </div>
                     <div class="errtxt" id="p${i}e" style="padding-left:44px"></div>
                 </div>`;
@@ -224,28 +237,66 @@ class QuyNhanModule extends HTMLElement {
     _calcQuyNhan() {
         if (typeof Solar === 'undefined') { alert('Thư viện lịch lỗi.'); return; }
         this.querySelectorAll('.errtxt').forEach(e=>e.textContent='');
-        this.querySelectorAll('input').forEach(i=>i.classList.remove('invalid'));
+        this.querySelectorAll('input, select').forEach(i=>i.classList.remove('invalid'));
         const myDate = this._parseDateDMY(this.querySelector('#myDate').value);
-        const myTime = this._parseTime(this.querySelector('#myTime').value);
+        const myTimeRaw = this.querySelector('#myTime').value;
         let hasErr = false;
-        if (!myDate) { this.querySelector('#myDate').classList.add('invalid'); this.querySelector('#myErr').textContent='⚠ Ngày không hợp lệ'; hasErr=true; }
-        if (!myTime) { this.querySelector('#myTime').classList.add('invalid'); this.querySelector('#myErr').textContent+=' ⚠ Giờ không hợp lệ'; hasErr=true; }
-        if (hasErr) { this.querySelector('#qn-results').style.display='none'; return; }
+        if (!myDate) { 
+            this.querySelector('#myDate').classList.add('invalid'); 
+            this.querySelector('#myErr').textContent='⚠ Ngày không hợp lệ'; 
+            hasErr=true; 
+        }
+        let myTime = this._parseTime(myTimeRaw);
+        if (myTime === null) {
+            // Không chọn giờ => mặc định 00:00
+            myTime = {h:0, min:0};
+        } else if (myTime === false) {
+            // Trường hợp sai định dạng (không thể xảy ra với select)
+            this.querySelector('#myTime').classList.add('invalid'); 
+            this.querySelector('#myErr').textContent = (this.querySelector('#myErr').textContent + ' ⚠ Giờ không hợp lệ').trim(); 
+            hasErr=true;
+        }
+        if (hasErr) { 
+            this.querySelector('#qn-results').style.display='none'; 
+            return; 
+        }
         let myBZ;
-        try { myBZ = this._getBaZi(myDate.y, myDate.m, myDate.d, myTime.h, myTime.min, true); }
-        catch(e) { this.querySelector('#myErr').textContent='Lỗi: '+e.message; return; }
+        try { 
+            myBZ = this._getBaZi(myDate.y, myDate.m, myDate.d, myTime.h, myTime.min, true); 
+        } catch(e) { 
+            this.querySelector('#myErr').textContent='Lỗi: '+e.message; 
+            return; 
+        }
         const people = [];
         for (let i=1;i<=5;i++) {
             const dRaw = this.querySelector(`#p${i}d`).value.trim();
             const tRaw = this.querySelector(`#p${i}t`).value.trim();
             if (!dRaw) continue;
             const pd = this._parseDateDMY(dRaw);
-            if (!pd) { this.querySelector(`#p${i}d`).classList.add('invalid'); this.querySelector(`#p${i}e`).textContent='⚠ Ngày không hợp lệ'; continue; }
-            const pt = this._parseTime(tRaw);
-            if (tRaw && !pt) { this.querySelector(`#p${i}t`).classList.add('invalid'); this.querySelector(`#p${i}e`).textContent='⚠ Giờ không hợp lệ'; continue; }
+            if (!pd) { 
+                this.querySelector(`#p${i}d`).classList.add('invalid'); 
+                this.querySelector(`#p${i}e`).textContent='⚠ Ngày không hợp lệ'; 
+                continue; 
+            }
+            let pt;
+            if (tRaw === '') {
+                // Không chọn => mặc định 00:00
+                pt = {h:0, min:0};
+            } else {
+                pt = this._parseTime(tRaw);
+                if (!pt) { 
+                    this.querySelector(`#p${i}t`).classList.add('invalid'); 
+                    this.querySelector(`#p${i}e`).textContent='⚠ Giờ không hợp lệ'; 
+                    continue; 
+                }
+            }
             let pBZ;
-            try { pBZ = this._getBaZi(pd.y, pd.m, pd.d, pt?pt.h:0, pt?pt.min:0, true); }
-            catch(e) { this.querySelector(`#p${i}e`).textContent='Lỗi: '+e.message; continue; }
+            try { 
+                pBZ = this._getBaZi(pd.y, pd.m, pd.d, pt.h, pt.min, true); 
+            } catch(e) { 
+                this.querySelector(`#p${i}e`).textContent='Lỗi: '+e.message; 
+                continue; 
+            }
             people.push({idx:i, bz:pBZ});
         }
         let html = `<div class="my-card"><h3>⭐ Bát Tự của bạn</h3><div class="bz-row">${this._renderPillars(myBZ)}</div><div style="color:var(--muted);margin-top:4px">${this._baziStr(myBZ)}</div><div class="note-card"><strong>Thiên Ất Quý Nhân:</strong> Giáp/Mậu/Canh→Sửu,Mùi · Ất/Kỷ→Tý,Thân · Bính/Đinh→Hợi,Dậu · Tân→Ngọ,Dần · Nhâm/Quý→Mão,Tỵ<br>🟡 Vàng = bạn là quý nhân · 🔵 Xanh = người là quý nhân của bạn</div></div>`;
