@@ -1,5 +1,5 @@
 // ========================================================
-// MODULE TỬ VI – LÁ SỐ (ĐÃ SỬA LỖI MOBILE)
+// MODULE TỬ VI – LÁ SỐ (ĐÃ TỐI ƯU MOBILE)
 // ========================================================
 class TuViModule extends HTMLElement {
   constructor() {
@@ -49,7 +49,6 @@ class TuViModule extends HTMLElement {
           width: auto;
           box-shadow: none;
         }
-        /* Ô năm sinh và năm xem cần rộng hơn trên mobile */
         .year-input {
           min-width: 80px;
           width: 100%;
@@ -287,18 +286,31 @@ class TuViModule extends HTMLElement {
           border: 1px solid #333;
           line-height: 1.2;
         }
-        /* Điều chỉnh riêng cho mobile */
+
+        /* ========== ĐIỀU CHỈNH CHO MOBILE ========== */
         @media (max-width: 700px) {
           .cung-ten { font-size: 0.5rem; }
-          .chi-name { font-size: 0.45rem; }
-          .chinh-tinh { font-size: 0.6rem; }
-          .sao-trai, .sao-phai, .truong-sinh { font-size: 0.5rem; }
+          .chi-name { font-size: 0.4rem; }
+          .chinh-tinh { font-size: 0.55rem; }
+          .sao-trai, .sao-phai { font-size: 0.5rem; }
+          .truong-sinh { font-size: 0.45rem; }
           .dai-van-corner { font-size: 0.45rem; }
-          .trung-tam { font-size: 0.6rem; padding: 4px; }
+          .trung-tam { font-size: 0.65rem; padding: 4px; }
           .tuan-triet-marker { font-size: 0.4rem; padding: 1px 3px; }
           .form-group label { width: 100px; font-size: 1rem; }
           #inputScreen { padding: 20px 15px; }
           .year-input { min-width: 70px; }
+
+          /* Kéo dài lá số, thêm chiều cao cho ô */
+          .tử-vi-grid {
+            aspect-ratio: auto;
+            min-height: 140vw;
+          }
+
+          /* Giảm cỡ chữ trong ô trung tâm */
+          .name-row { font-size: 0.9rem; }
+          .info-line .label { font-size: 0.6rem; }
+          .info-line .value { font-size: 0.65rem; }
         }
         #inputError {
           color: #b33f3d;
@@ -323,7 +335,6 @@ class TuViModule extends HTMLElement {
       <div id="resultScreen">
         <button class="back-btn" id="backBtn">← Nhập lại thông tin</button>
         <div class="tử-vi-grid" id="tuViGrid">
-          <!-- Các cung giữ nguyên như file gốc -->
           <div class="cung c-1"  id="cung1"><span class="chi-name" id="cung1Chi">TỴ</span><span class="cung-ten" id="cung1Ten">MỆNH</span><span class="cung-than" id="cung1Than"></span><div class="chinh-tinh" id="c1Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c1Trai"></div><div class="sao-phai" id="c1Phai"></div></div><div class="truong-sinh" id="c1TruongSinh"></div><span class="dai-van-corner" id="dvCorner1"></span></div>
           <div class="cung c-2"  id="cung2"><span class="chi-name" id="cung2Chi">NGỌ</span><span class="cung-ten" id="cung2Ten">PHỤ MẪU</span><span class="cung-than" id="cung2Than"></span><div class="chinh-tinh" id="c2Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c2Trai"></div><div class="sao-phai" id="c2Phai"></div></div><div class="truong-sinh" id="c2TruongSinh"></div><span class="dai-van-corner" id="dvCorner2"></span></div>
           <div class="cung c-3"  id="cung3"><span class="chi-name" id="cung3Chi">MÙI</span><span class="cung-ten" id="cung3Ten">PHÚC ĐỨC</span><span class="cung-than" id="cung3Than"></span><div class="chinh-tinh" id="c3Chinh"></div><div class="phu-tinh-row"><div class="sao-trai" id="c3Trai"></div><div class="sao-phai" id="c3Phai"></div></div><div class="truong-sinh" id="c3TruongSinh"></div><span class="dai-van-corner" id="dvCorner3"></span></div>
@@ -429,7 +440,7 @@ class TuViModule extends HTMLElement {
     };
   }
 
-  // ========== TOÀN BỘ LOGIC AN SAO (GIỮ NGUYÊN TỪ FILE GỐC) ==========
+  // ========== TOÀN BỘ LOGIC AN SAO (GIỮ NGUYÊN) ==========
   _buildDoSangMap() {
     const rawData = {
       'Tý': { M: ['thiên cơ', 'thiên phủ', 'thái âm', 'thiên tướng', 'thiên lương', 'phá quân', 'lộc tồn'], V: ['vũ khúc', 'thiên đồng', 'cự môn', 'tham lang', 'thái dương'], D: ['văn xương', 'văn khúc'], B: ['tử vi', 'liêm trinh'], H: ['thái dương', 'kình dương', 'hỏa tinh', 'linh tinh'] },
@@ -892,7 +903,7 @@ class TuViModule extends HTMLElement {
     else { if (tuanPair) addMarker(tuanPair, 'Tuần'); if (trietPair) addMarker(trietPair, 'Triệt'); }
   }
 
-  // ========== XỬ LÝ LÁ SỐ CHÍNH (đã sửa lỗi và thêm validation) ==========
+  // ========== XỬ LÝ LÁ SỐ CHÍNH ==========
   _extractLaSoData() {
     const cung = {};
     for (let i = 1; i <= 12; i++) {
