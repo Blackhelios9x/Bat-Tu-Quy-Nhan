@@ -28,7 +28,7 @@ class BatTuModule extends HTMLElement {
     this._currentDaiVanList = null;
     this._currentDungThanInfo = null;
 
-    // ========== GIAO DIỆN ==========
+    // ========== GIAO DIỆN (CHỈ CÓ TAB DỤNG THẦN) ==========
     this.innerHTML = /* html */ `
       <style>
         :host {
@@ -105,21 +105,17 @@ class BatTuModule extends HTMLElement {
           padding: 14px 6px; border-radius: 16px; font-size: 1.3rem; font-weight: 700;
           border: 1px solid transparent;
         }
-        /* Màu nền cho từng hành */
         .nh-kim  { color: var(--c-kim);  background: var(--bg-kim);  border-color: #bdbdbd; }
         .nh-moc  { color: var(--c-moc);  background: var(--bg-moc);  border-color: #a5d6a7; }
         .nh-thuy { color: var(--c-thuy); background: var(--bg-thuy); border-color: #64b5f6; }
         .nh-hoa  { color: var(--c-hoa);  background: var(--bg-hoa);  border-color: #ef9a9a; }
         .nh-tho  { color: var(--c-tho);  background: var(--bg-tho);  border-color: #ffe082; }
 
-        /* Đại vận */
         .dv-title { font-size: 0.9rem; color: var(--primary-d); margin-bottom: 12px; }
         .dv-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
         .dv-item {
-          background: var(--in-bg);
-          border: 1px solid var(--bor);
-          border-radius: 12px; padding: 10px 4px; text-align: center;
-          cursor: pointer; transition: transform .1s;
+          text-align: center; border-radius: 12px; padding: 10px 4px;
+          cursor: pointer; transition: transform .1s; border: 1px solid transparent;
         }
         .dv-item:hover { filter: brightness(0.95); transform: scale(0.98); }
         .dv-age { font-size: 0.65rem; color: var(--muted); margin-top: 5px; }
@@ -130,13 +126,10 @@ class BatTuModule extends HTMLElement {
           border-radius: 8px;
         }
 
-        /* Lưu niên */
         .ln-grid { display: flex; overflow-x: auto; gap: 10px; padding: 10px 0; -webkit-overflow-scrolling: touch; }
         .ln-item {
-          flex: 0 0 80px; background: var(--in-bg);
-          border: 1px solid var(--bor);
-          border-radius: 16px; padding: 6px 4px; text-align: center;
-          cursor: pointer; transition: transform .1s;
+          flex: 0 0 80px; text-align: center; border-radius: 16px;
+          padding: 6px 4px; cursor: pointer; transition: transform .1s; border: 1px solid transparent;
         }
         .ln-item:hover { filter: brightness(0.95); transform: scale(0.97); }
         .ln-year { font-size: .7rem; color: var(--muted); margin-bottom: 4px; }
@@ -145,6 +138,12 @@ class BatTuModule extends HTMLElement {
           display: inline-block; padding: 2px 6px; margin: 2px;
           border-radius: 8px;
         }
+
+        .dv-item.nh-kim, .ln-item.nh-kim { background: var(--bg-kim); border-color: #bdbdbd; }
+        .dv-item.nh-moc, .ln-item.nh-moc { background: var(--bg-moc); border-color: #a5d6a7; }
+        .dv-item.nh-thuy, .ln-item.nh-thuy { background: var(--bg-thuy); border-color: #64b5f6; color: #fff; }
+        .dv-item.nh-hoa, .ln-item.nh-hoa { background: var(--bg-hoa); border-color: #ef9a9a; }
+        .dv-item.nh-tho, .ln-item.nh-tho { background: var(--bg-tho); border-color: #ffe082; }
 
         .dt-verdict { border-radius: 20px; padding: 22px; background: #fcf9f5; border: 1px solid var(--bor); }
         .verdict-title { font-size: 1.2rem; font-weight: 700; color: var(--primary-d); margin-bottom: 10px; }
@@ -264,7 +263,6 @@ class BatTuModule extends HTMLElement {
 
   _parseDateDMY(str) {
     if (!str) return null;
-    // Cho phép nhập dạng 01081999 hoặc 01/08/1999
     let parts = str.trim().split('/');
     if (parts.length === 1 && str.length === 8 && !isNaN(str)) {
       const d = parseInt(str.substring(0,2),10);
@@ -502,7 +500,6 @@ class BatTuModule extends HTMLElement {
     html += `<div class="ln-grid" id="dv-years-grid">`;
     for (let i=0; i<10; i++) {
       const year = startYear + i;
-      // Dùng tháng 7 để lấy đúng Can Chi sau Tết
       const solar = Solar.fromYmd(year, 7, 1);
       const lunar = solar.getLunar();
       const ganIdx = lunar.getYearGanIndex();
@@ -627,7 +624,7 @@ class BatTuModule extends HTMLElement {
     let html = '';
     for (let i=0; i<10; i++) {
       const year = currentYear + i;
-      const solar = Solar.fromYmdHms(year, 7, 1, 0,0,0); // tháng 7 để tránh trước Tết
+      const solar = Solar.fromYmdHms(year, 7, 1, 0,0,0);
       const lunar = solar.getLunar();
       const ganIdx = lunar.getYearGanIndex();
       const zhiIdx = lunar.getYearZhiIndex();
