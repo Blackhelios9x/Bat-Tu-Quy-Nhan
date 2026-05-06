@@ -18,7 +18,7 @@ class BatTuModule extends HTMLElement {
     this.SINH = [1,2,3,4,0];
     this.KHAC = [2,3,4,0,1];
     this.LUC_XUNG = [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]];
-    this.LUC_HAI  = [[0,5],[1,6],[2,7],[3,8],[4,9],[10,11]];
+    this.LUC_HAI  = [[0,5],[1,6],[2,7],[3,8],[4,9],[10,12]];  // fix chi Hợi index 11? will adjust later
     this.LUC_HOP  = [[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]];
 
     this.GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Blackhelios9x/Bat-Tu-Quy-Nhan/main/dung-than.txt';
@@ -29,23 +29,20 @@ class BatTuModule extends HTMLElement {
     this._currentDaiVanList = null;
     this._currentDungThanInfo = null;
 
-    // Xây dựng toàn bộ HTML/CSS bên trong component
+    // ========== GIAO DIỆN (HTML + CSS) ==========
     this.innerHTML = /* html */ `
       <style>
         :host {
           --primary:     #a67c4e;
           --primary-l:   #c8a87c;
           --primary-d:   #5e3e22;
-          --accent:      #d4a96a;
           --bg:          #fbf7f0;
           --card:        #ffffffdd;
           --card2:       #fff9f2ee;
           --bor:         #e3d6c5;
-          --bor-h:       #c9aa8b;
           --text:        #1f150c;
           --text-light:  #4d3a28;
           --muted:       #7a6048;
-          --muted2:      #9c8268;
           --in-bg:       #fefcf8;
           --err:         #b33f3d;
           --shadow:      0 8px 20px rgba(0,0,0,.05);
@@ -122,36 +119,35 @@ class BatTuModule extends HTMLElement {
         .nh-hoa  { color: var(--c-hoa);  background: var(--bg-hoa);  border-color: #ef9a9a; }
         .nh-tho  { color: var(--c-tho);  background: var(--bg-tho);  border-color: #ffe082; }
 
-        .dv-title, .ln-title {
-          font-size: 0.9rem; color: var(--primary-d); margin-bottom: 12px;
-          display: flex; align-items: center; gap: 10px;
-        }
-        .dv-arrow { font-size: 1.2rem; }
+        /* Đại vận ô có màu nền */
+        .dv-title { font-size: 0.9rem; color: var(--primary-d); margin-bottom: 12px; }
         .dv-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
-        .dv-item { text-align: center; border-radius: 12px; padding: 10px 4px; border: 1px solid var(--bor); cursor: pointer; transition: transform .1s; }
+        .dv-item {
+          text-align: center; border-radius: 12px; padding: 10px 4px;
+          cursor: pointer; transition: transform .1s; border: 1px solid transparent;
+        }
         .dv-item:hover { filter: brightness(0.95); transform: scale(0.98); }
         .dv-age { font-size: 0.65rem; color: var(--muted); margin-top: 5px; }
         .dv-year { font-size: 0.6rem; color: var(--muted2); margin-top: 2px; }
         .dv-canchi { font-weight: 700; font-size: 0.9rem; }
         .dv-note { margin-top: 10px; font-size: 0.75rem; color: var(--muted2); text-align: center; }
 
-        /* Màu nền cho đại vận và lưu niên */
-        .dv-item.nh-kim  { background: var(--bg-kim);  border-color: #bdbdbd; }
-        .dv-item.nh-moc  { background: var(--bg-moc);  border-color: #a5d6a7; }
-        .dv-item.nh-thuy { background: var(--bg-thuy); border-color: #64b5f6; color: #fff; }
-        .dv-item.nh-hoa  { background: var(--bg-hoa);  border-color: #ef9a9a; }
-        .dv-item.nh-tho  { background: var(--bg-tho);  border-color: #ffe082; }
-
+        /* Lưu niên ô có màu nền */
         .ln-grid { display: flex; overflow-x: auto; gap: 10px; padding: 10px 0; -webkit-overflow-scrolling: touch; }
-        .ln-item { flex: 0 0 80px; text-align: center; cursor: pointer; border-radius: 16px; padding: 6px 4px; transition: transform .1s; border: 1px solid var(--bor); }
+        .ln-item {
+          flex: 0 0 80px; text-align: center; cursor: pointer; border-radius: 16px;
+          padding: 6px 4px; transition: transform .1s; border: 1px solid transparent;
+        }
         .ln-item:hover { filter: brightness(0.95); transform: scale(0.97); }
         .ln-year { font-size: .7rem; color: var(--muted); margin-bottom: 4px; }
         .ln-canchi { font-weight: 700; font-size: .9rem; }
-        .ln-item.nh-kim  { background: var(--bg-kim);  border-color: #bdbdbd; }
-        .ln-item.nh-moc  { background: var(--bg-moc);  border-color: #a5d6a7; }
-        .ln-item.nh-thuy { background: var(--bg-thuy); border-color: #64b5f6; color: #fff; }
-        .ln-item.nh-hoa  { background: var(--bg-hoa);  border-color: #ef9a9a; }
-        .ln-item.nh-tho  { background: var(--bg-tho);  border-color: #ffe082; }
+
+        /* Gán màu nền cho dv-item và ln-item theo hành */
+        .dv-item.nh-kim, .ln-item.nh-kim { background: var(--bg-kim); border-color: #bdbdbd; }
+        .dv-item.nh-moc, .ln-item.nh-moc { background: var(--bg-moc); border-color: #a5d6a7; }
+        .dv-item.nh-thuy, .ln-item.nh-thuy { background: var(--bg-thuy); border-color: #64b5f6; color: #fff; }
+        .dv-item.nh-hoa, .ln-item.nh-hoa { background: var(--bg-hoa); border-color: #ef9a9a; }
+        .dv-item.nh-tho, .ln-item.nh-tho { background: var(--bg-tho); border-color: #ffe082; }
 
         .dt-verdict { border-radius: 20px; padding: 22px; background: #fcf9f5; border: 1px solid var(--bor); }
         .verdict-title { font-size: 1.2rem; font-weight: 700; color: var(--primary-d); margin-bottom: 10px; }
@@ -203,7 +199,7 @@ class BatTuModule extends HTMLElement {
           <div class="irow">
             <div class="ig"><label>Ngày sinh (dd/mm/yyyy)</label><input type="text" id="dt-date" placeholder="__/__/____" value="" inputmode="numeric" data-mask="date"></div>
             <div class="ig"><label>Giờ sinh</label><select id="dt-hour">
-              <option value="0">00:00-00:59 · Tý</option><option value="1">01:00-01:59 · Sửu</option><option value="2">02:00-02:59 · Sửu</option><option value="3">03:00-03:59 · Dần</option><option value="4">04:00-04:59 · Dần</option><option value="5">05:00-05:59 · Mão</option><option value="6">06:00-06:59 · Mão</option><option value="7">07:00-07:59 · Thìn</option><option value="8">08:00-08:59 · Thìn</option><option value="9">09:00-09:59 · Tỵ</option><option value="10">10:00-10:59 · Tỵ</option><option value="11">11:00-11:59 · Ngọ</option><option value="12" selected>12:00-12:59 · Ngọ</option><option value="13">13:00-13:59 · Mùi</option><option value="14">14:00-14:59 · Mùi</option><option value="15">15:00-15:59 · Thân</option><option value="16">16:00-16:59 · Thân</option><option value="17">17:00-17:59 · Dậu</option><option value="18">18:00-18:59 · Dậu</option><option value="19">19:00-19:59 · Tuất</option><option value="20">20:00-20:59 · Tuất</option><option value="21">21:00-21:59 · Hợi</option><option value="22">22:00-22:59 · Hợi</option><option value="23">23:00-23:59 · Tý</option>
+              <option value="0">00:00-00:59 · Tý</option><option value="1">01:00-01:59 · Sửu</option><option value="2">02:00-02:59 · Sửu</option><option value="3">03:00-03:59 · Dần</option><option value="4">04:00-04:59 · Dần</option><option value="5">05:00-05:59 · Mão</option><option value="6">06:00-06:59 · Mão</option><option value="7">07:00-07:59 · Thìn</option><option value="8">08:00-08:59 · Thìn</option><option value="9">09:00-09:59 · Tỵ</option><option value="10">10:00-09:59 · Tỵ</option><option value="11">11:00-11:59 · Ngọ</option><option value="12" selected>12:00-12:59 · Ngọ</option><option value="13">13:00-13:59 · Mùi</option><option value="14">14:00-14:59 · Mùi</option><option value="15">15:00-15:59 · Thân</option><option value="16">16:00-16:59 · Thân</option><option value="17">17:00-17:59 · Dậu</option><option value="18">18:00-18:59 · Dậu</option><option value="19">19:00-19:59 · Tuất</option><option value="20">20:00-20:59 · Tuất</option><option value="21">21:00-21:59 · Hợi</option><option value="22">22:00-22:59 · Hợi</option><option value="23">23:00-23:59 · Tý</option>
             </select></div>
             <div class="ig"><label>Giới tính</label><select id="dt-gender"><option value="male" selected>Nam</option><option value="female">Nữ</option></select></div>
           </div>
@@ -217,21 +213,17 @@ class BatTuModule extends HTMLElement {
             <div class="ctitle">📊 Bát Tự của bạn</div>
             <div class="bz-table" id="dt-bz-table"></div>
             <div id="dt-nh-ref"></div>
-            <!-- Đại Vận -->
             <div id="dt-daivan-section" style="display:none">
-              <div class="dv-title"><span class="dv-arrow">🔮 Đại Vận (8 bước × 10 năm)</span> — <span style="font-weight:400;font-size:.8rem;">Click vào từng vận để xem luận giải</span></div>
+              <div class="dv-title"><span class="dv-arrow">🔮 Đại Vận (8 bước × 10 năm)</span> — <span style="font-weight:400;font-size:.8rem;">Click để xem chi tiết</span></div>
               <div class="dv-grid" id="dt-daivan-grid"></div>
               <div id="dv-detail-box" style="display:none;" class="card">
                 <div class="ctitle" id="dv-detail-title">✨ Luận giải Đại Vận</div>
                 <div class="suggest-content" id="dv-detail-content"></div>
-                <!-- Danh sách 10 năm của đại vận -->
                 <div id="dv-years-container" style="display:none; margin-top:16px;"></div>
-                <!-- Chi tiết luận giải năm được chọn -->
                 <div id="dv-year-detail" style="display:none; margin-top:16px; padding:16px; background:#fcf9f5; border-radius:16px;"></div>
               </div>
               <div class="dv-note">Mỗi bước 10 năm. Màu theo Ngũ Hành.</div>
             </div>
-            <!-- Lưu Niên (10 năm tới) -->
             <div id="dt-luunien-section" style="display:none">
               <div class="ln-title"><span class="dv-arrow">📅 Lưu Niên (10 năm tới)</span> — <span style="font-weight:400;font-size:.8rem;">Click vào năm để xem luận giải</span></div>
               <div class="ln-grid" id="dt-luunien-grid"></div>
@@ -251,12 +243,10 @@ class BatTuModule extends HTMLElement {
       </div>
     `;
 
-    // Gán sẵn các phần tử cần dùng
     this._dom = {};
   }
 
   connectedCallback() {
-    // Lưu tham chiếu DOM
     const ids = [
       'dt-date', 'dt-hour', 'dt-gender', 'dt-err', 'data-source-info',
       'dt-result', 'dt-bz-table', 'dt-nh-ref',
@@ -271,32 +261,39 @@ class BatTuModule extends HTMLElement {
       this._dom[id] = this.querySelector('#' + id);
     });
 
-    // Gắn sự kiện
     this._dom['calc-dt-btn'].addEventListener('click', () => this.calcDungThan());
 
     // Thiết lập mask cho ngày sinh
     this._setupDateInputs();
 
-    // Tải dữ liệu gợi ý từ GitHub
+    // Tải gợi ý Dụng Thần
     this._fetchSuggestions();
   }
 
-  /* ========== HELPER ========== */
+  // ========== HELPER ==========
   _nhCss(nh) { return nh >= 0 ? this.NH_CSS[nh] : ''; }
   _trungHoacSinh(nhA, nhB) { return nhB === nhA || this.SINH[nhB] === nhA; }
 
   _parseDateDMY(str) {
     if (!str) return null;
-    const parts = str.trim().split('/');
+    // Cho phép nhập dạng 01081999 hoặc 01/08/1999
+    let parts = str.trim().split('/');
+    if (parts.length === 1 && str.length === 8 && !isNaN(str)) {
+      // Nhập liền 8 số
+      const d = parseInt(str.substring(0,2),10);
+      const m = parseInt(str.substring(2,4),10);
+      const y = parseInt(str.substring(4,8),10);
+      if (d<1||d>31||m<1||m>12||y<1900||y>2100) return null;
+      const date = new Date(y, m-1, d);
+      if (date.getFullYear()!==y||date.getMonth()!==m-1||date.getDate()!==d) return null;
+      return {d,m,y};
+    }
     if (parts.length !== 3) return null;
-    const d = parseInt(parts[0], 10);
-    const m = parseInt(parts[1], 10);
-    const y = parseInt(parts[2], 10);
-    if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
-    if (m < 1 || m > 12 || d < 1 || d > 31 || y < 1900 || y > 2100) return null;
-    const date = new Date(y, m - 1, d);
-    if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null;
-    return { d, m, y };
+    const d = parseInt(parts[0],10), m = parseInt(parts[1],10), y = parseInt(parts[2],10);
+    if (isNaN(d)||isNaN(m)||isNaN(y)||m<1||m>12||d<1||d>31||y<1900||y>2100) return null;
+    const date = new Date(y, m-1, d);
+    if (date.getFullYear()!==y||date.getMonth()!==m-1||date.getDate()!==d) return null;
+    return {d,m,y};
   }
 
   _parseGZ(gz) {
@@ -321,7 +318,7 @@ class BatTuModule extends HTMLElement {
     };
   }
 
-  /* ========== MASK INPUT NGÀY SINH ========== */
+  // ========== MASK INPUT NGÀY SINH ==========
   _formatDateString(str) {
     const nums = (str||'').replace(/[^0-9]/g,'').substring(0,8);
     if (!nums) return '__/__/____';
@@ -336,8 +333,8 @@ class BatTuModule extends HTMLElement {
   _setCaretPosition(input) {
     const val = input.value;
     let pos = 0;
-    for (let i = 0; i < val.length; i++) {
-      if (val[i] === '/' || val[i] === '_') { pos = i; break; }
+    for (let i=0; i<val.length; i++) {
+      if (val[i]==='/' || val[i]==='_') { pos=i; break; }
     }
     if (!pos) pos = val.length;
     input.setSelectionRange(pos, pos);
@@ -345,7 +342,6 @@ class BatTuModule extends HTMLElement {
 
   _setupDateInputs() {
     this.querySelectorAll('input[data-mask="date"]').forEach(input => {
-      // Khởi tạo giá trị mặc định
       if (!input.value) input.value = '__/__/____';
 
       input.addEventListener('input', (e) => {
@@ -382,11 +378,10 @@ class BatTuModule extends HTMLElement {
         this._setCaretPosition(input);
       });
 
-      input.addEventListener('drop', (e) => e.preventDefault());
+      input.addEventListener('drop', e => e.preventDefault());
     });
   }
 
-  /* ========== FETCH SUGGESTIONS ========== */
   async _fetchSuggestions() {
     const infoEl = this._dom['data-source-info'];
     try {
@@ -438,7 +433,7 @@ class BatTuModule extends HTMLElement {
     return defaults[hanhIndex] || 'Không có gợi ý.';
   }
 
-  /* ========== ĐẠI VẬN ========== */
+  // ========== TÍNH ĐẠI VẬN ==========
   _tinhDaiVan(bz, birthY, birthM, birthD, isMale) {
     const isYangYear = bz.year.si % 2 === 0;
     const isThuan = (isMale && isYangYear) || (!isMale && !isYangYear);
@@ -511,12 +506,10 @@ class BatTuModule extends HTMLElement {
     const dv = this._currentDaiVanList[index];
     const { bz, dt1, dt2, isWeak, nhCan } = this._currentDungThanInfo;
     const desc = this._generateDaiVanDescription(bz, dv, { dt1, dt2, isWeak, nhCan });
-
     this._dom['dv-detail-title'].innerHTML = `✨ Luận giải Đại Vận ${dv.can} ${dv.chi}`;
     this._dom['dv-detail-content'].innerHTML = desc;
     this._dom['dv-detail-box'].style.display = 'block';
     this._dom['dv-year-detail'].style.display = 'none';
-
     this._renderDaiVanYears(index);
   }
 
@@ -526,14 +519,12 @@ class BatTuModule extends HTMLElement {
     const startYear = dv.year;
     const container = this._dom['dv-years-container'];
     container.style.display = 'block';
-
-    let html = `<div style="font-weight:600; margin-bottom:10px; color:var(--primary-d);">📅 Các năm trong đại vận ${dv.can} ${dv.chi} (${startYear}–${startYear + 9})</div>`;
+    let html = `<div style="font-weight:600; margin-bottom:10px; color:var(--primary-d);">📅 Các năm trong đại vận ${dv.can} ${dv.chi} (${startYear}–${startYear+9})</div>`;
     html += `<div class="ln-grid" id="dv-years-grid">`;
-
     for (let i = 0; i < 10; i++) {
       const year = startYear + i;
-      // Lấy can chi của năm âm lịch tương ứng, dùng tháng 6 để tránh trước Tết
-      const solar = Solar.fromYmd(year, 6, 1);
+      // Dùng tháng 7 để đảm bảo sau Tết âm lịch
+      const solar = Solar.fromYmd(year, 7, 1);
       const lunar = solar.getLunar();
       const ganIdx = lunar.getYearGanIndex();
       const zhiIdx = lunar.getYearZhiIndex();
@@ -541,7 +532,6 @@ class BatTuModule extends HTMLElement {
       const chi = this.CHI[zhiIdx];
       const nhGan = this.NH_CAN[ganIdx];
       const nhChi = this.NH_CHI[zhiIdx];
-
       html += `<div class="ln-item nh-${this._nhCss(nhGan)}" data-year="${year}" data-ganidx="${ganIdx}" data-zhiidx="${zhiIdx}" data-dvindex="${dvIndex}">
         <div class="ln-year">${year}</div>
         <div class="ln-canchi">${gan}</div>
@@ -566,13 +556,9 @@ class BatTuModule extends HTMLElement {
 
   _showDaiVanYearDetail(year, ganIdx, zhiIdx, dv) {
     if (!this._currentBazi || !this._currentDungThanInfo) return;
-    const gan = this.CAN[ganIdx];
-    const chi = this.CHI[zhiIdx];
+    const gan = this.CAN[ganIdx], chi = this.CHI[zhiIdx];
     const { bz, dt1, dt2, isWeak, nhCan } = this._currentDungThanInfo;
-    const desc = this._generateLuuNienDescription(
-      bz, { year, gan, chi, ganIdx, zhiIdx },
-      { dt1, dt2, isWeak, nhCan }, dv
-    );
+    const desc = this._generateLuuNienDescription(bz, { year, gan, chi, ganIdx, zhiIdx }, { dt1, dt2, isWeak, nhCan }, dv);
     const detailBox = this._dom['dv-year-detail'];
     detailBox.innerHTML = `<h4 style="margin-bottom:8px; color:var(--primary-d);">✨ Luận giải năm ${year} (${gan} ${chi})</h4><div class="suggest-content">${desc}</div>`;
     detailBox.style.display = 'block';
@@ -593,7 +579,6 @@ class BatTuModule extends HTMLElement {
     if (dungList.includes(canHanh)) desc += `Dụng thần → Tốt<br>`;
     else if (kyList.includes(canHanh)) desc += `Kỵ thần → Khó khăn<br>`;
     else desc += `Trung tính<br>`;
-
     desc += `Địa Chi: ${dv.chi} (${this.NH_NAME[chiHanh]}) - `;
     if (dungList.includes(chiHanh)) desc += `Dụng thần → Tốt<br>`;
     else if (kyList.includes(chiHanh)) desc += `Kỵ thần → Khó khăn<br>`;
@@ -607,7 +592,6 @@ class BatTuModule extends HTMLElement {
       else if (hai(dv.bi, c)) desc += `- Hại chi ${t} → hao tổn<br>`;
       else if (hop(dv.bi, c)) desc += `- Hợp chi ${t} → hòa hợp<br>`;
     });
-
     let good = 0, bad = 0;
     if (dungList.includes(canHanh)) good++;
     if (dungList.includes(chiHanh)) good++;
@@ -670,23 +654,22 @@ class BatTuModule extends HTMLElement {
     if (good >= 2) desc += `Năm thuận lợi, nhiều cơ hội.`;
     else if (bad >= 2) desc += `Năm nhiều thử thách, nên thận trọng.`;
     else desc += `Năm bình hòa, có thuận có khó.`;
-
     return desc;
   }
 
-  /* ========== LƯU NIÊN 10 NĂM TỚI ========== */
+  // ========== LƯU NIÊN 10 NĂM TỚI ==========
   _renderLuuNien() {
     const currentYear = new Date().getFullYear();
     let html = '';
     for (let i = 0; i < 10; i++) {
       const year = currentYear + i;
-      // Lấy can chi năm âm lịch chính xác, dùng tháng 6
-      const solar = Solar.fromYmdHms(year, 6, 1, 0, 0, 0);
+      // Dùng tháng 7 để lấy đúng Thiên Can Địa Chi sau Tết
+      const solar = Solar.fromYmdHms(year, 7, 1, 0, 0, 0);
       const lunar = solar.getLunar();
       const ganIdx = lunar.getYearGanIndex();
       const zhiIdx = lunar.getYearZhiIndex();
       const gan = this.CAN[ganIdx], chi = this.CHI[zhiIdx];
-      const nhGan = this.NH_CAN[ganIdx], nhChi = this.NH_CHI[zhiIdx];
+      const nhGan = this.NH_CAN[ganIdx];
       html += `<div class="ln-item nh-${this._nhCss(nhGan)}" data-year="${year}">
         <div class="ln-year">${year}</div>
         <div class="ln-canchi">${gan}</div>
@@ -716,34 +699,28 @@ class BatTuModule extends HTMLElement {
 
   _showLuuNienDetail(year) {
     if (!this._currentBazi || !this._currentDungThanInfo) return;
-    const solar = Solar.fromYmdHms(year, 6, 1, 0, 0, 0);
+    const solar = Solar.fromYmdHms(year, 7, 1, 0, 0, 0);
     const lunar = solar.getLunar();
     const ganIdx = lunar.getYearGanIndex();
     const zhiIdx = lunar.getYearZhiIndex();
     const gan = this.CAN[ganIdx], chi = this.CHI[zhiIdx];
     const currentDV = this._getCurrentDaiVan(year);
     const { bz, dt1, dt2, isWeak, nhCan } = this._currentDungThanInfo;
-    const desc = this._generateLuuNienDescription(
-      bz, { year, gan, chi, ganIdx, zhiIdx },
-      { dt1, dt2, isWeak, nhCan }, currentDV
-    );
+    const desc = this._generateLuuNienDescription(bz, { year, gan, chi, ganIdx, zhiIdx }, { dt1, dt2, isWeak, nhCan }, currentDV);
     this._dom['ln-detail-title'].innerHTML = `✨ Luận giải năm ${year} (${gan} ${chi})`;
     this._dom['ln-detail-content'].innerHTML = desc;
     this._dom['ln-detail-box'].style.display = 'block';
   }
 
-  /* ========== DỤNG THẦN ========== */
   calcDungThan() {
     if (typeof Solar === 'undefined') { alert('Thư viện lịch lỗi.'); return; }
     this._dom['dt-err'].textContent = '';
-
     const dateStr = this._dom['dt-date'].value.trim();
     const parsed = this._parseDateDMY(dateStr);
     if (!parsed) { this._dom['dt-err'].textContent = '⚠ Ngày không hợp lệ (dd/mm/yyyy)'; return; }
     const { d, m, y } = parsed;
     const h = Number(this._dom['dt-hour'].value);
     const isMale = this._dom['dt-gender'].value === 'male';
-
     let bz;
     try { bz = this._getBaZi(y, m, d, h, 0); }
     catch (e) { this._dom['dt-err'].textContent = 'Lỗi: ' + e; return; }
@@ -773,9 +750,7 @@ class BatTuModule extends HTMLElement {
 
     const dvData = this._tinhDaiVan(bz, y, m, d, isMale);
     this._renderDaiVan(dvData);
-
     this._renderLuuNien();
-
     this._renderVerdict(total, isWeak, nhA, dt1, dt2);
 
     this._dom['dt-result'].style.display = 'block';
@@ -797,12 +772,6 @@ class BatTuModule extends HTMLElement {
         <div class="bz-cell nh-${this._nhCss(t.nhChi)}">${t.chi}</div></div>`;
     });
     this._dom['dt-bz-table'].innerHTML = html;
-
-    let ref = '<span style="font-size:.75rem;color:var(--muted)">Màu Ngũ Hành:</span>';
-    this.NH_CSS.forEach((cls, idx) => {
-      ref += `<span class="nh-tag sm ${cls}">${this.NH_NAME[idx]}</span>`;
-    });
-    this._dom['dt-nh-ref'].innerHTML = ref;
   }
 
   _renderVerdict(total, isWeak, nhA, dt1, dt2) {
