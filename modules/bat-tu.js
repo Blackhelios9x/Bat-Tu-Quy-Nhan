@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
 <title>Bát Tự · Dụng Thần &amp; Quý Nhân</title>
-<script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js">
+</script>
 <style>
 /* ========== BIẾN MÀU TƯƠI SÁNG ========== */
 :root {
@@ -24,7 +25,7 @@
   --in-bg:       #fefcf8;
   --err:         #b33f3d;
   --shadow:      0 8px 20px rgba(0,0,0,.05);
-  
+
   --c-kim:    #5c5c5c;
   --bg-kim:   #e0e0e0;
   --c-moc:    #2e7d32;
@@ -180,21 +181,6 @@ input.w { width: 100%; } input.n { width: 100%; }
 .pct-fill { background: var(--primary); height: 100%; border-radius: 6px; }
 .note-card { background: #faf3eb; border-left: 5px solid var(--primary); padding: 14px 18px; border-radius: 0 16px 16px 0; }
 
-/* Thêm cho Lưu niên trong Đại vận */
-.dv-ln-container {
-  margin-top: 20px;
-  border-top: 2px dashed var(--bor-h);
-  padding-top: 20px;
-}
-.dv-ln-title {
-  font-weight: 600; margin-bottom: 10px; font-size: 0.95rem;
-}
-.ln-detail-box {
-  margin-top: 20px; padding: 15px;
-  background: #fcf9f5; border-radius: 16px;
-  display: none;
-}
-
 footer { text-align: center; padding: 30px; color: var(--muted); }
 
 @media (max-width: 600px) {
@@ -248,12 +234,14 @@ footer { text-align: center; padding: 30px; color: var(--muted); }
           <div id="dv-detail-box" style="display:none;" class="card">
             <div class="ctitle" id="dv-detail-title">✨ Luận giải Đại Vận</div>
             <div class="suggest-content" id="dv-detail-content"></div>
-            <!-- Vùng hiển thị 10 năm của đại vận (mới) -->
-            <div id="dv-ln-container" class="dv-ln-container" style="display:none;"></div>
+            <!-- Bổ sung: container danh sách 10 năm của đại vận -->
+            <div id="dv-years-container" style="display:none; margin-top:16px;"></div>
+            <!-- Bổ sung: chi tiết luận giải năm được chọn -->
+            <div id="dv-year-detail" style="display:none; margin-top:16px; padding:16px; background:#fcf9f5; border-radius:16px;"></div>
           </div>
           <div class="dv-note">Mỗi bước 10 năm. Màu theo Ngũ Hành.</div>
         </div>
-        <!-- Lưu Niên độc lập (giữ nguyên) -->
+        <!-- Lưu Niên -->
         <div id="dt-luunien-section" style="display:none">
           <div class="ln-title"><span class="dv-arrow">📅 Lưu Niên (10 năm tới)</span> — <span style="font-weight:400;font-size:.8rem;">Click vào năm để xem luận giải</span></div>
           <div class="ln-grid" id="dt-luunien-grid"></div>
@@ -457,19 +445,86 @@ function renderDaiVan(dvData) {
   currentDaiVanList = dvList;
 }
 
+/* ========== HIỂN THỊ CHI TIẾT ĐẠI VẬN (đã sửa để bổ sung 10 năm) ========== */
 function showDaiVanDetail(index) {
   if (!currentDaiVanList || !currentBazi || !currentDungThanInfo) return;
   const dv = currentDaiVanList[index];
   const { bz, dt1, dt2, isWeak, nhCan } = currentDungThanInfo;
   const desc = generateDaiVanDescription(bz, dv, { dt1, dt2, isWeak, nhCan });
+
+  // Luận giải đại vận
   document.getElementById('dv-detail-title').innerHTML = `✨ Luận giải Đại Vận ${dv.can} ${dv.chi}`;
   document.getElementById('dv-detail-content').innerHTML = desc;
   document.getElementById('dv-detail-box').style.display = 'block';
-  
-  // Thêm danh sách 10 năm của đại vận này
-  renderDaiVanLuuNien(index);
+
+  // Ẩn luận giải năm cũ (nếu có)
+  document.getElementById('dv-year-detail').style.display = 'none';
+
+  // Gọi hàm hiển thị 10 năm của đại vận
+  renderDaiVanYears(index);
 }
 
+/* ========== HIỂN THỊ 10 NĂM TRONG ĐẠI VẬN ========== */
+function renderDaiVanYears(dvIndex) {
+  if (!currentDaiVanList) return;
+  const dv = currentDaiVanList[dvIndex];
+  const startYear = dv.year;  // năm bắt đầu đại vận (dương lịch)
+  const container = document.getElementById('dv-years-container');
+  container.style.display = 'block';
+
+  let html = `<div style="font-weight:600; margin-bottom:10px;">📅 Các năm trong đại vận ${dv.can} ${dv.chi} (${startYear}–${startYear+9})</div>`;
+  html += `<div class="ln-grid" id="dv-years-grid">`;
+
+  for (let i = 0; i < 10; i++) {
+    const year = startYear + i;
+    // Dùng thư viện lunar: cần lấy Can Chi của năm âm lịch
+    const solar = Solar.fromYmd(year, 1, 1);
+    const lunar = solar.getLunar();
+    const ganIdx = lunar.getYearGanIndex();
+    const zhiIdx = lunar.getYearZhiIndex();
+    const gan = CAN[ganIdx];
+    const chi = CHI[zhiIdx];
+    const nhGan = NH_CAN[ganIdx];
+    const nhChi = NH_CHI[zhiIdx];
+
+    html += `<div class="ln-item" data-year="${year}" data-ganidx="${ganIdx}" data-zhiidx="${zhiIdx}" data-dvindex="${dvIndex}">
+      <div class="ln-year">${year}</div>
+      <div class="ln-canchi nh-${nhCss(nhGan)}">${gan}</div>
+      <div class="ln-canchi nh-${nhCss(nhChi)}">${chi}</div>
+    </div>`;
+  }
+  html += `</div>`;
+  container.innerHTML = html;
+
+  // Gắn sự kiện click cho từng năm
+  document.querySelectorAll('#dv-years-grid .ln-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      const year = +item.dataset.year;
+      const ganIdx = +item.dataset.ganidx;
+      const zhiIdx = +item.dataset.zhiidx;
+      const dvIdx = +item.dataset.dvindex;
+      const dv = currentDaiVanList[dvIdx];
+      showDaiVanYearDetail(year, ganIdx, zhiIdx, dv);
+    });
+  });
+}
+
+/* ========== HIỂN THỊ LUẬN GIẢI NĂM TRONG ĐẠI VẬN ========== */
+function showDaiVanYearDetail(year, ganIdx, zhiIdx, dv) {
+  if (!currentBazi || !currentDungThanInfo) return;
+  const gan = CAN[ganIdx];
+  const chi = CHI[zhiIdx];
+  const { bz, dt1, dt2, isWeak, nhCan } = currentDungThanInfo;
+  // Sử dụng lại hàm generateLuuNienDescription đã có, truyền thêm dv
+  const desc = generateLuuNienDescription(bz, { year, gan, chi, ganIdx, zhiIdx }, { dt1, dt2, isWeak, nhCan }, dv);
+  
+  const detailBox = document.getElementById('dv-year-detail');
+  detailBox.innerHTML = `<h4 style="margin-bottom:8px; color:var(--primary-d);">✨ Luận giải năm ${year} (${gan} ${chi})</h4><div class="suggest-content">${desc}</div>`;
+  detailBox.style.display = 'block';
+  detailBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ========== MÔ TẢ ĐẠI VẬN (giữ nguyên) ========== */
 function generateDaiVanDescription(bz, dv, info) {
   const { dt1, dt2, isWeak, nhCan } = info;
   const dungList = [dt1, dt2];
@@ -511,7 +566,7 @@ function generateDaiVanDescription(bz, dv, info) {
   return desc;
 }
 
-/* ========== LƯU NIÊN (ĐỘC LẬP) ========== */
+/* ========== LƯU NIÊN (10 năm tới, giữ nguyên) ========== */
 function renderLuuNien(bz) {
   const currentYear = new Date().getFullYear();
   let html = '';
@@ -558,64 +613,7 @@ function showLuuNienDetail(year) {
   document.getElementById('ln-detail-box').style.display = 'block';
 }
 
-/* ========== LƯU NIÊN THEO ĐẠI VẬN (MỚI) ========== */
-function renderDaiVanLuuNien(dvIndex) {
-  const dv = currentDaiVanList[dvIndex];
-  const startYear = dv.year;
-  const container = document.getElementById('dv-ln-container');
-  container.style.display = 'block';
-  let html = `<div class="dv-ln-title">📅 Các năm trong đại vận ${dv.can} ${dv.chi} (${startYear}–${startYear+9})</div>`;
-  html += `<div class="ln-grid" id="dv-ln-grid">`;
-
-  for (let i = 0; i < 10; i++) {
-    const year = startYear + i;
-    const solar = Solar.fromYmdHms(year, 1, 1, 0, 0, 0);
-    const lunar = solar.getLunar();
-    const ganIdx = lunar.getYearGanIndex();
-    const zhiIdx = lunar.getYearZhiIndex();
-    const gan = CAN[ganIdx];
-    const chi = CHI[zhiIdx];
-    const nhGan = NH_CAN[ganIdx];
-    const nhChi = NH_CHI[zhiIdx];
-    html += `<div class="ln-item" data-year="${year}" data-ganidx="${ganIdx}" data-zhiidx="${zhiIdx}">
-      <div class="ln-year">${year}</div>
-      <div class="ln-canchi nh-${nhCss(nhGan)}">${gan}</div>
-      <div class="ln-canchi nh-${nhCss(nhChi)}">${chi}</div>
-    </div>`;
-  }
-  html += `</div>`;
-  html += `<div id="dv-ln-detail" class="ln-detail-box"></div>`;
-  container.innerHTML = html;
-
-  // Gắn sự kiện click
-  container.querySelectorAll('.ln-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      const year = +item.dataset.year;
-      const ganIdx = +item.dataset.ganidx;
-      const zhiIdx = +item.dataset.zhiidx;
-      showDaiVanLuuNienDetail(year, ganIdx, zhiIdx, dv);
-    });
-  });
-  
-  // Ẩn chi tiết năm cũ nếu có
-  const detailBox = document.getElementById('dv-ln-detail');
-  if (detailBox) detailBox.style.display = 'none';
-}
-
-function showDaiVanLuuNienDetail(year, ganIdx, zhiIdx, dv) {
-  if (!currentBazi || !currentDungThanInfo) return;
-  const gan = CAN[ganIdx];
-  const chi = CHI[zhiIdx];
-  const { bz, dt1, dt2, isWeak, nhCan } = currentDungThanInfo;
-  const desc = generateLuuNienDescription(bz, { year, gan, chi, ganIdx, zhiIdx }, { dt1, dt2, isWeak, nhCan }, dv);
-  const detailBox = document.getElementById('dv-ln-detail');
-  if (detailBox) {
-    detailBox.innerHTML = `<h4>✨ Luận giải năm ${year} (${gan} ${chi})</h4><div>${desc}</div>`;
-    detailBox.style.display = 'block';
-  }
-}
-
-/* Hàm luận giải năm (dùng chung cho cả hai chức năng) */
+/* ========== HÀM LUẬN GIẢI LƯU NIÊN (dùng chung cho cả 2 nơi) ========== */
 function generateLuuNienDescription(bz, yearObj, info, dv) {
   const { gan, chi, ganIdx, zhiIdx } = yearObj;
   const { dt1, dt2, isWeak, nhCan } = info;
@@ -667,10 +665,10 @@ function generateLuuNienDescription(bz, yearObj, info, dv) {
   else if (bad >= 2) desc += `Năm nhiều thử thách, nên thận trọng.`;
   else desc += `Năm bình hòa, có thuận có khó.`;
 
-  return desc;
+  return desc.replace(/\n/g, '<br>');
 }
 
-/* ========== DỤNG THẦN ========== */
+/* ========== DỤNG THẦN (giữ nguyên) ========== */
 function calcDungThan(){
   if(typeof Solar==='undefined'){ alert('Thư viện lịch lỗi.'); return; }
   document.getElementById('dt-err').textContent = '';
@@ -712,7 +710,7 @@ function calcDungThan(){
   const dvData = tinhDaiVan(bz, y, m, d, isMale);
   renderDaiVan(dvData);
 
-  // Lưu niên độc lập (giữ nguyên)
+  // Lưu niên
   renderLuuNien(bz);
 
   // Kết luận Dụng Thần
@@ -760,7 +758,7 @@ function renderBaZiTable(bz){
   document.getElementById('dt-nh-ref').innerHTML=ref;
 }
 
-/* ========== QUÝ NHÂN ========== */
+/* ========== QUÝ NHÂN (giữ nguyên) ========== */
 function calcQuyNhan(){
   if(typeof Solar==='undefined'){ alert('Thư viện lịch lỗi.'); return; }
   document.querySelectorAll('#panel-qn .errtxt').forEach(e=>e.textContent='');
