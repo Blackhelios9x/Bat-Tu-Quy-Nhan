@@ -115,10 +115,11 @@
     </div>
   </header>
 
-  <!-- ===== PAGE TABS ===== -->
+  <!-- ===== PAGE TABS (thêm tab Quý Nhân nếu cần) ===== -->
   <nav class="page-tabs">
     <button class="page-tab active" data-page="batu">🔥 Bát Tự</button>
     <button class="page-tab"        data-page="tuvi">🌿 Tử Vi</button>
+    <button class="page-tab"        data-page="quynhan">✨ Quý Nhân</button>
   </nav>
 
   <!-- ===== NỘI DUNG ===== -->
@@ -134,6 +135,11 @@
       <tu-vi-module id="tuViMod"></tu-vi-module>
     </section>
 
+    <!-- MODULE QUÝ NHÂN -->
+    <section class="page-section" id="page-quynhan">
+      <quy-nhan-module id="quyNhanMod"></quy-nhan-module>
+    </section>
+
   </main>
 
   <footer>
@@ -142,9 +148,10 @@
   </footer>
 
   <!-- ② Các module (load sau thư viện lịch) -->
-  <!-- SỬA LỖI: thêm đường dẫn thư mục modules/ vì các file bat-tu.js và an-sao.js nằm trong thư mục con modules -->
   <script src="modules/bat-tu.js"></script>
   <script src="modules/an-sao.js"></script>
+  <!-- QUAN TRỌNG: Load file module Quý Nhân -->
+  <script src="modules/quy-nhan.js"></script>
 
   <script>
     /* ===== CHUYỂN MODULE ===== */
@@ -158,10 +165,7 @@
       });
     });
 
-    /* ===== GIAO TIẾP GIỮA HAI MODULE =====
-       Khi BatTuModule tính xong, phát sự kiện 'batu-ready'.
-       TuViModule lắng nghe để tự điền ngày sinh nếu cần.
-    */
+    /* ===== GIAO TIẾP GIỮA CÁC MODULE ===== */
     document.getElementById('batuMod').addEventListener('batu-ready', e => {
       const { bz, dt1, dt2, isWeak } = e.detail;
       console.log('[batu-ready]', {
@@ -171,7 +175,6 @@
       });
     });
 
-    /* ===== Khi TuViModule lập xong lá số, phát 'laso-ready' ===== */
     document.getElementById('tuViMod').addEventListener('laso-ready', e => {
       console.log('[laso-ready] laSoData:', e.detail.laSoData);
     });
