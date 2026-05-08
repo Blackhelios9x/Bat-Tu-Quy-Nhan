@@ -1,108 +1,108 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bát Tự & Tử Vi</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bát Tự & Tử Vi</title>
 
-<!-- ① Thư viện lịch — bắt buộc load trước các module -->
-<script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
+  <!-- ① Thư viện lịch — bắt buộc load trước các module -->
+  <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script>
 
-<style>
-  /* ===== RESET & NỀN ===== */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <style>
+    /* ===== RESET & NỀN ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    background: #f5ede0;
-    background-image: url('bg.jpg'); /* thay bằng ảnh nền tuỳ ý */
-    background-size: cover;
-    background-attachment: fixed;
-    min-height: 100vh;
-  }
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: #f5ede0;
+      background-image: url('bg.jpg'); /* thay bằng ảnh nền tuỳ ý */
+      background-size: cover;
+      background-attachment: fixed;
+      min-height: 100vh;
+    }
 
-  /* Lớp phủ nhẹ để chữ dễ đọc */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background: rgba(250,240,225,.55);
-    z-index: 0;
-    pointer-events: none;
-  }
+    /* Lớp phủ nhẹ để chữ dễ đọc */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: rgba(250,240,225,.55);
+      z-index: 0;
+      pointer-events: none;
+    }
 
-  /* ===== SHELL HEADER ===== */
-  .app-header {
-    position: relative; z-index: 10;
-    background: rgba(94,62,34,.96);
-    color: #fdf0e0;
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 4px 14px rgba(0,0,0,.25);
-  }
+    /* ===== SHELL HEADER ===== */
+    .app-header {
+      position: relative; z-index: 10;
+      background: rgba(94,62,34,.96);
+      color: #fdf0e0;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    }
 
-  .app-header h1 {
-    font-size: clamp(1rem, 3vw, 1.35rem);
-    font-weight: 700;
-    letter-spacing: 1px;
-  }
+    .app-header h1 {
+      font-size: clamp(1rem, 3vw, 1.35rem);
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
 
-  .app-header .sub {
-    font-size: .75rem;
-    opacity: .7;
-    margin-top: 2px;
-  }
+    .app-header .sub {
+      font-size: .75rem;
+      opacity: .7;
+      margin-top: 2px;
+    }
 
-  /* ===== MAIN PAGE TABS (module switcher) ===== */
-  .page-tabs {
-    position: relative; z-index: 10;
-    display: flex;
-    background: rgba(75,50,28,.90);
-    border-bottom: 2px solid rgba(201,170,113,.35);
-  }
+    /* ===== MAIN PAGE TABS (module switcher) ===== */
+    .page-tabs {
+      position: relative; z-index: 10;
+      display: flex;
+      background: rgba(75,50,28,.90);
+      border-bottom: 2px solid rgba(201,170,113,.35);
+    }
 
-  .page-tab {
-    flex: 1;
-    max-width: 220px;
-    padding: 13px 12px;
-    background: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    color: rgba(240,220,180,.65);
-    font-size: .95rem;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    letter-spacing: .5px;
-    transition: color .18s, border-color .18s, background .18s;
-  }
+    .page-tab {
+      flex: 1;
+      max-width: 220px;
+      padding: 13px 12px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: rgba(240,220,180,.65);
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .5px;
+      transition: color .18s, border-color .18s, background .18s;
+    }
 
-  .page-tab:hover { color: #f0dcb0; background: rgba(255,255,255,.06); }
-  .page-tab.active { color: #f0dcb0; border-bottom-color: #c9aa71; }
+    .page-tab:hover { color: #f0dcb0; background: rgba(255,255,255,.06); }
+    .page-tab.active { color: #f0dcb0; border-bottom-color: #c9aa71; }
 
-  /* ===== NỘI DUNG CHÍNH ===== */
-  .page-content {
-    position: relative; z-index: 1;
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 24px 16px 60px;
-  }
+    /* ===== NỘI DUNG CHÍNH ===== */
+    .page-content {
+      position: relative; z-index: 1;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
 
-  .page-section { display: none; }
-  .page-section.active { display: block; }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
 
-  /* ===== FOOTER ===== */
-  footer {
-    position: relative; z-index: 2;
-    text-align: center;
-    padding: 24px 16px;
-    color: rgba(94,62,34,.65);
-    font-size: .73rem;
-    line-height: 1.9;
-    border-top: 1px solid rgba(94,62,34,.12);
-  }
-</style>
+    /* ===== FOOTER ===== */
+    footer {
+      position: relative; z-index: 2;
+      text-align: center;
+      padding: 24px 16px;
+      color: rgba(94,62,34,.65);
+      font-size: .73rem;
+      line-height: 1.9;
+      border-top: 1px solid rgba(94,62,34,.12);
+    }
+  </style>
 </head>
 
 <body>
@@ -141,42 +141,41 @@
     <p>Chỉ mang tính tham khảo · Không thay thế tư vấn chuyên nghiệp</p>
   </footer>
 
-<!-- ② Các module (load sau thư viện lịch) -->
-<script src="bat-tu.js"></script>
-<script src="an-sao.js"></script>
+  <!-- ② Các module (load sau thư viện lịch) -->
+  <!-- SỬA LỖI: thêm đường dẫn thư mục modules/ vì các file bat-tu.js và an-sao.js nằm trong thư mục con modules -->
+  <script src="modules/bat-tu.js"></script>
+  <script src="modules/an-sao.js"></script>
 
-<script>
-  /* ===== CHUYỂN MODULE ===== */
-  document.querySelectorAll('.page-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.page;
-      document.querySelectorAll('.page-tab').forEach(b =>
-        b.classList.toggle('active', b.dataset.page === id));
-      document.querySelectorAll('.page-section').forEach(s =>
-        s.classList.toggle('active', s.id === 'page-' + id));
+  <script>
+    /* ===== CHUYỂN MODULE ===== */
+    document.querySelectorAll('.page-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.page;
+        document.querySelectorAll('.page-tab').forEach(b =>
+          b.classList.toggle('active', b.dataset.page === id));
+        document.querySelectorAll('.page-section').forEach(s =>
+          s.classList.toggle('active', s.id === 'page-' + id));
+      });
     });
-  });
 
-  /* ===== GIAO TIẾP GIỮA HAI MODULE =====
-     Khi BatTuModule tính xong, phát sự kiện 'batu-ready'.
-     TuViModule lắng nghe để tự điền ngày sinh nếu cần.
-  */
-  document.getElementById('batuMod').addEventListener('batu-ready', e => {
-    const { bz, dt1, dt2, isWeak } = e.detail;
-    // Ví dụ: log ra console để debug
-    console.log('[batu-ready]', {
-      batTu: `${bz.hour.can}${bz.hour.chi} ${bz.day.can}${bz.day.chi} ${bz.month.can}${bz.month.chi} ${bz.year.can}${bz.year.chi}`,
-      dungThan: ['Mộc','Hỏa','Thổ','Kim','Thủy'][dt1] + ' + ' + ['Mộc','Hỏa','Thổ','Kim','Thủy'][dt2],
-      thanVuong: !isWeak,
+    /* ===== GIAO TIẾP GIỮA HAI MODULE =====
+       Khi BatTuModule tính xong, phát sự kiện 'batu-ready'.
+       TuViModule lắng nghe để tự điền ngày sinh nếu cần.
+    */
+    document.getElementById('batuMod').addEventListener('batu-ready', e => {
+      const { bz, dt1, dt2, isWeak } = e.detail;
+      console.log('[batu-ready]', {
+        batTu: `${bz.hour.can}${bz.hour.chi} ${bz.day.can}${bz.day.chi} ${bz.month.can}${bz.month.chi} ${bz.year.can}${bz.year.chi}`,
+        dungThan: ['Mộc','Hỏa','Thổ','Kim','Thủy'][dt1] + ' + ' + ['Mộc','Hỏa','Thổ','Kim','Thủy'][dt2],
+        thanVuong: !isWeak,
+      });
     });
-    // Mở rộng: có thể gọi tuViMod._something(bz) ở đây nếu muốn tích hợp sâu hơn
-  });
 
-  /* ===== Khi TuViModule lập xong lá số, phát 'laso-ready' ===== */
-  document.getElementById('tuViMod').addEventListener('laso-ready', e => {
-    console.log('[laso-ready] laSoData:', e.detail.laSoData);
-  });
-</script>
+    /* ===== Khi TuViModule lập xong lá số, phát 'laso-ready' ===== */
+    document.getElementById('tuViMod').addEventListener('laso-ready', e => {
+      console.log('[laso-ready] laSoData:', e.detail.laSoData);
+    });
+  </script>
 
 </body>
 </html>
